@@ -2,8 +2,6 @@
 # Based on the example givn in the course CHM1464H (Topics in statistical mechanics: The
 # Foundations of molecular simulations)
 
-using Distributions
-
 const dim = 3
 
 type Atom{T}
@@ -14,16 +12,26 @@ end
 
 Atom(r) = Atom(r,zeros(dim), zeros(dim))
 
-function makelattice(latticedistance::Float64, N::Int, L::Float64)
-  system = Array{Atom,1}(N)
+function makelattice(N::Int, L::Float64)
+  latticedistance = ceil(L/(cbrt(N)))
+  #  latticedistance = L/ceil(cbrt(N)) #   #We round the cubic root of N to Inf and then divide L by it,
+  #taken from the example but it is not clear the physical meaning of this choice.
+  atoms = Array{Atom,1}(N)
 
   i = 0
   j = 0
   k = 0
 
+  #First point on the lattice
+  latticex = i*latticedistance - 0.5*L
+  latticey = j*latticedistance - 0.5*L
+  latticez = k*latticedistance - 0.5*L
+
+  atoms[1] = Atom([latticex, latticey, latticez])
+
   #Lattice point where the atoms are put
-  for loop in 0:N-1
-    i+= 1
+  for loop in 2:N
+    i+=1
     latticex = i*latticedistance - 0.5*L
 
     if latticex >= 0.5*L
@@ -44,37 +52,55 @@ function makelattice(latticedistance::Float64, N::Int, L::Float64)
 
     latticez = k*latticedistance - 0.5*L
 
-    system[loop + 1] = Atom([latticex, latticey, latticez])
+    atoms[loop] = Atom([latticex, latticey, latticez])
 
   end
 
-  return system
+  return atoms
 
 end
 
+@doc """function that creates the array of N atoms in a lattice of side L, with the temperature given by T"""->
+function initialize(L::Float64, N::Int64, T::Float64)
+  atoms = makelattice(N, L)
 
-
-
-function initialize(sytem::Array{Atom,1}, L::Float64, N::Int64, T::Float64)
-  latticedistance = L/ceil(cbrt(N))  #We round the cubic root of N to Inf and then divide L by it, taken from the example but it is not clear the physical meaning of this choice.
-  scale = sqrt(T)
   K = 0 #Kinetic energy
 
-  normal = Normal()  #Normal distribution with mean zero and standard deviation one.
-
+  ##The approach for velocities is adapted from the book "Understanding Molecular Dynamics" (Daan Frenkel)
+  sumv = 0.
+  sumv2 = 0.
   #Initial momentum
   for i=1:N
-    x = rand(normal, dim)
-    system[i].p = scale*x
-    K += sum(system[i].p .^2)
+    for j=1:dim
+      v = 2*rand() - 1.0
+      sumv += v
+      sumv2 += v*v
+      atoms[i].p[j] = v
+    end
   end
 
+  ### The point is that the average momentum (p of center of mass) has to be equal to zero. The scale factor
+  ## guarantees that the total kinetic energy is equal to dim/2 times N times kT (k = 1)
+  vaverage =  sumv/(dim*N)
+  scale = sqrt(dim*T*N/(sumv2 - (sumv)^2./(3*N)))
+  println("scale= $scale")
+
+
+
+  for i in 1:N
+    for j in 1:dim
+      atoms[i].p[j] = scale*(atoms[i].p[j] - vaverage)
+      K += atoms[i].p[j]^2.
+    end
+  end
+
+  U = computeforces!(atoms, L)
   #Intantaneous kinetic temperature and energy
-
-  T = K/(3*N)
+  T = K/(dim*N)
   K = K/2
+  return atoms, T, K, U
+end
 
- end
 
 
 @doc """Function dealing with periodic boundary conditions. Increases or decreases a number d
@@ -92,8 +118,181 @@ function makePeriodic(distance::Float64, L::Float64)
 end
 
 
-function computeforces(system::Array{Atom,1})
+@doc """ Determine the interaction force for each pair of particles (i, j)"""->
+function computeforces!(atoms::Array{Atom,1}, L::Float64)
 
-  #Initialize energy to zero
-  U = 0
+  rc_outer = 3.0 #Outer cutoff radius
+  rc_inner = 2.5 #Inner cutoff radius
+  N = length(atoms)
+  U = 0.0
+
+  for i in 1:N
+    for j in 1:dim
+      atoms[i].f[j] = 0.
+    end
+  end
+
+
+  for i in 1:N-1
+    for j in (i+1):N
+
+            deltax = makePeriodic(atoms[i].r[1] - atoms[j].r[1], L)
+            deltay = makePeriodic(atoms[i].r[2] - atoms[j].r[2], L)
+            deltaz = makePeriodic(atoms[i].r[3] - atoms[j].r[3], L)
+
+      r2 = deltax*deltax + deltay*deltay + deltaz*deltaz
+
+      if r2 < rc_inner*rc_inner
+
+        r2inverse = 1/r2
+        r6inverse = r2inverse * r2inverse * r2inverse
+
+        fij = 48*r2inverse*r6inverse*(r6inverse - 0.5)   #Note the use of reduced units
+        Vij = 4*r6inverse*(r6inverse - 1.)
+        U += Vij
+
+        atoms[i].f[1] += fij*deltax
+        atoms[i].f[2] += fij*deltay
+        atoms[i].f[3] += fij*deltaz
+
+        atoms[j].f[1] -= fij*deltax
+        atoms[j].f[2] -= fij*deltay
+        atoms[j].f[3] -= fij*deltaz
+
+      elseif  rc_inner*rc_inner <= r2 <= rc_outer*rc_outer
+
+        #Considering a smooth cutoof region, between rc_inner and rc_outer
+        #Defined the potential as alpha*Vij with alpha the following function
+        # alpha(r) = (rc_outer - r)^2*(rc_outer - 3*rc_inner + 2*r)/(rc_outer - rc_inner)^3
+
+        r2inverse = 1/r2
+        r6inverse = r2inverse * r2inverse * r2inverse
+        fij = 48*r2inverse*r6inverse*(r6inverse - 0.5)   #Note the use of reduced units
+        Vij = 4*r6inverse*(r6inverse - 1.)
+
+        r = sqrt(r2)
+         d = rc_outer - rc_inner
+          alpha = (rc_outer - r)^2.*(rc_outer - 3*rc_inner + 2*r)/(d)^3
+         fij = alpha*fij + Vij*(-6*(r - rc_outer)*(r - rc_inner)/(d^3.*r))
+        Vij = Vij*alpha
+
+        #r      = sqrt(r2)
+        #x      = (2*r - rc_inner - rc_outer)/(rc_inner - rc_outer)
+        #alpha  = 0.5 - 0.25*x*(x*x - 3.)
+        #dalpha = 1.5*(x*x - 1)/(r*(rc_inner-rc_outer))
+        #fij    = alpha*fij + dalpha*Vij
+       # Vij    = alpha*Vij
+
+        U +=Vij
+
+        atoms[i].f[1] += fij*deltax
+        atoms[i].f[2] += fij*deltay
+        atoms[i].f[3] += fij*deltaz
+
+        atoms[j].f[1] -= fij*deltax
+        atoms[j].f[2] -= fij*deltay
+        atoms[j].f[3] -= fij*deltaz
+
+
+
+
+      end
+
+
+    end
+  end
+  return U
 end
+
+
+
+#The integration will be performed using the Verlet method
+
+
+
+# function measureK(atoms::Array{Atom,1})
+#   K = 0
+
+#   for i in 1:length(atoms)
+#     for j in 1:dim
+#       K += atoms[i].p[j]^2.
+#     end
+#   end
+
+#   K = K/2
+
+#   return K
+# end
+
+
+function integratestep!(atoms::Array{Atom,1}, dt::Float64, L::Float64)
+  N = length(atoms)
+
+    # half-force step
+    for i in 1:N
+        for j in 1:dim
+            atoms[i].p[j] +=  0.5*dt*atoms[i].f[j]
+        end
+    end
+
+   # full free motion step
+    for i in 1:N
+        for j in 1:dim
+        atoms[i].r[j] += dt*atoms[i].p[j]
+          #  atoms[i].r[j] = makePeriodic(atoms[i].r[j],L)
+
+        end
+    end
+
+
+
+  # positions were changed, so recompute the forces
+   U = computeforces!(atoms, L)
+
+   # final force half-step
+   K = 0.
+    for i in 1:N
+        for j in 1:dim
+            atoms[i].p[j] +=  0.5*dt*atoms[i].f[j]
+            K +=  atoms[i].p[j]^2.
+            end
+    end
+
+    K = K/2.
+
+  return K, U
+end
+
+
+
+
+function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64)
+  L = cbrt(N/rho)
+  numsteps = ceil(runtime/dt)
+  #Put initial conditions
+  atoms, T, K , U = initialize(L, N, T)
+  H = U + K
+  T = K*2/(dim*N)
+
+  #Report results
+  println("time, H, U/N, K/N, T")
+  println("0.0, $(H/N), $(U/N),  $(K/N), $T")
+
+
+  #Perform time steps
+  for count in 1:numsteps
+    K, U =integratestep!(atoms, dt, L)
+    H = U + K
+    T = K*2/(dim*N)
+
+    #Report results
+    println("$(count*dt), $H, $(U/N),  $(K/N), $T")
+
+  end
+end
+
+
+
+
+
+
