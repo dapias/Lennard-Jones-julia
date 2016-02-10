@@ -1,6 +1,15 @@
 #Julia code to perform a 3D Lennard-Jones simulation with periodic boundary conditions and limits [-L/2, L/2]
-# Based on the example givn in the course CHM1464H (Topics in statistical mechanics: The
+# Based on the example given in the course CHM1464H (Topics in statistical mechanics: The
 # Foundations of molecular simulations)
+
+#Parameters suggested
+#N: 343
+#rho: 1.0
+#T: 0.1
+#runtime: 40.0
+#timestep: 0.01
+
+module LennardJones
 
 const dim = 3
 
@@ -14,8 +23,6 @@ Atom(r) = Atom(r,zeros(dim), zeros(dim))
 
 function makelattice(N::Int, L::Float64)
   latticedistance = ceil(L/(cbrt(N)))
-  #  latticedistance = L/ceil(cbrt(N)) #   #We round the cubic root of N to Inf and then divide L by it,
-  #taken from the example but it is not clear the physical meaning of this choice.
   atoms = Array{Atom,1}(N)
 
   i = 0
@@ -23,34 +30,34 @@ function makelattice(N::Int, L::Float64)
   k = 0
 
   #First point on the lattice
-  latticex = i*latticedistance - 0.5*L
-  latticey = j*latticedistance - 0.5*L
-  latticez = k*latticedistance - 0.5*L
+    latticex = ceil(i*latticedistance - 0.5*L)
+    latticey = ceil(j*latticedistance - 0.5*L)
+    latticez = ceil(k*latticedistance - 0.5*L)
 
   atoms[1] = Atom([latticex, latticey, latticez])
 
   #Lattice point where the atoms are put
   for loop in 2:N
     i+=1
-    latticex = i*latticedistance - 0.5*L
+        latticex = ceil(i*latticedistance - 0.5*L)
 
-    if latticex >= 0.5*L
+        if latticex >= ceil(0.5*L)
       i = 0 #Put back to the first position but now second column
-      latticex = i*latticedistance - 0.5*L
+      latticex =  ceil(i*latticedistance - 0.5*L)
       j += 1
 
     end
 
-    latticey = j*latticedistance - 0.5*L
+    latticey =  ceil(j*latticedistance - 0.5*L)
 
-    if latticey >= 0.5*L
+        if latticey >= ceil(0.5*L)
       j = 0 #Put back to the first position but now third column
-      latticey = j*latticedistance - 0.5*L
+            latticey = ceil(j*latticedistance - 0.5*L)
       k  += 1
 
     end
 
-    latticez = k*latticedistance - 0.5*L
+        latticez = ceil(k*latticedistance - 0.5*L)
 
     atoms[loop] = Atom([latticex, latticey, latticez])
 
@@ -136,9 +143,9 @@ function computeforces!(atoms::Array{Atom,1}, L::Float64)
   for i in 1:N-1
     for j in (i+1):N
 
-            deltax = makePeriodic(atoms[i].r[1] - atoms[j].r[1], L)
-            deltay = makePeriodic(atoms[i].r[2] - atoms[j].r[2], L)
-            deltaz = makePeriodic(atoms[i].r[3] - atoms[j].r[3], L)
+      deltax = makePeriodic(atoms[i].r[1] - atoms[j].r[1], L)
+      deltay = makePeriodic(atoms[i].r[2] - atoms[j].r[2], L)
+      deltaz = makePeriodic(atoms[i].r[3] - atoms[j].r[3], L)
 
       r2 = deltax*deltax + deltay*deltay + deltaz*deltaz
 
@@ -171,9 +178,9 @@ function computeforces!(atoms::Array{Atom,1}, L::Float64)
         Vij = 4*r6inverse*(r6inverse - 1.)
 
         r = sqrt(r2)
-         d = rc_outer - rc_inner
-          alpha = (rc_outer - r)^2.*(rc_outer - 3*rc_inner + 2*r)/(d)^3
-         fij = alpha*fij + Vij*(-6*(r - rc_outer)*(r - rc_inner)/(d^3.*r))
+        d = rc_outer - rc_inner
+        alpha = (rc_outer - r)^2.*(rc_outer - 3*rc_inner + 2*r)/(d)^3
+        fij = alpha*fij + Vij*(-6*(r - rc_outer)*(r - rc_inner)/(d^3.*r))
         Vij = Vij*alpha
 
         #r      = sqrt(r2)
@@ -181,7 +188,7 @@ function computeforces!(atoms::Array{Atom,1}, L::Float64)
         #alpha  = 0.5 - 0.25*x*(x*x - 3.)
         #dalpha = 1.5*(x*x - 1)/(r*(rc_inner-rc_outer))
         #fij    = alpha*fij + dalpha*Vij
-       # Vij    = alpha*Vij
+        # Vij    = alpha*Vij
 
         U +=Vij
 
@@ -228,37 +235,37 @@ end
 function integratestep!(atoms::Array{Atom,1}, dt::Float64, L::Float64)
   N = length(atoms)
 
-    # half-force step
-    for i in 1:N
-        for j in 1:dim
-            atoms[i].p[j] +=  0.5*dt*atoms[i].f[j]
-        end
+  # half-force step
+  for i in 1:N
+    for j in 1:dim
+      atoms[i].p[j] +=  0.5*dt*atoms[i].f[j]
     end
+  end
 
-   # full free motion step
-    for i in 1:N
-        for j in 1:dim
-        atoms[i].r[j] += dt*atoms[i].p[j]
-          #  atoms[i].r[j] = makePeriodic(atoms[i].r[j],L)
+  # full free motion step
+  for i in 1:N
+    for j in 1:dim
+      atoms[i].r[j] += dt*atoms[i].p[j]
+      #  atoms[i].r[j] = makePeriodic(atoms[i].r[j],L)
 
-        end
     end
+  end
 
 
 
   # positions were changed, so recompute the forces
-   U = computeforces!(atoms, L)
+  U = computeforces!(atoms, L)
 
-   # final force half-step
-   K = 0.
-    for i in 1:N
-        for j in 1:dim
-            atoms[i].p[j] +=  0.5*dt*atoms[i].f[j]
-            K +=  atoms[i].p[j]^2.
-            end
+  # final force half-step
+  K = 0.
+  for i in 1:N
+    for j in 1:dim
+      atoms[i].p[j] +=  0.5*dt*atoms[i].f[j]
+      K +=  atoms[i].p[j]^2.
     end
+  end
 
-    K = K/2.
+  K = K/2.
 
   return K, U
 end
@@ -268,15 +275,32 @@ end
 
 function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64)
   L = cbrt(N/rho)
-  numsteps = ceil(runtime/dt)
+  numsteps = round(Int, ceil(runtime/dt))
   #Put initial conditions
   atoms, T, K , U = initialize(L, N, T)
   H = U + K
   T = K*2/(dim*N)
 
+  time = Array(Float64, numsteps+1)
+  energy = Array(Float64, numsteps+1)
+  kineticperparticle = Array(Float64, numsteps+1)
+  potentialperparticle = Array(Float64, numsteps+1)
+  temperature = Array(Float64, numsteps+1)
+
+
+
   #Report results
   println("time, H, U/N, K/N, T")
-  println("0.0, $(H/N), $(U/N),  $(K/N), $T")
+  println("0.0, H, $(U/N),  $(K/N), $T")
+
+  time[1] = 0.0
+  energy[1] = H
+  #kineticperparticle[1] = K/N
+  #potentialperparticle[1] = U/N
+  potentialperparticle[1] = U
+  kineticperparticle[1] = K
+  temperature[1] = T
+
 
 
   #Perform time steps
@@ -285,14 +309,23 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64)
     H = U + K
     T = K*2/(dim*N)
 
-    #Report results
-    println("$(count*dt), $H, $(U/N),  $(K/N), $T")
+    time[count+1] = count*dt
+    energy[count+1] = H
+    #kineticperparticle[count+1] = K/N
+    #potentialperparticle[count+1] = U/N
+    potentialperparticle[count+1] = U
+    kineticperparticle[count+1] = K
 
+    temperature[count+1] = T
+
+    #Report results
+    #println("$(count*dt), $H, $(U/N),  $(K/N), $T")
+    println("$(count*dt), $H, $(U),  $(K), $T")
   end
+
+  return time, energy, kineticperparticle, potentialperparticle, temperature
+
 end
 
-
-
-
-
+end
 
