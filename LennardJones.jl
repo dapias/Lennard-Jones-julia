@@ -2,14 +2,10 @@
 # Based on the example given in the course CHM1464H (Topics in statistical mechanics: The
 # Foundations of molecular simulations)
 
-#Parameters suggested
-#N: 343
-#rho: 1.0
-#T: 0.1
-#runtime: 40.0
-#timestep: 0.01
 
 module LennardJones
+
+export run, Atom, makelattice
 
 const dim = 3
 
@@ -21,55 +17,94 @@ end
 
 Atom(r) = Atom(r,zeros(dim), zeros(dim))
 
-function makelattice(N::Int, L::Float64)
-  latticedistance = ceil(L/(cbrt(N)))
+function makelattice(N::Int, L::Float64, rho::Float64)
+  latticedistance = L/ceil(cbrt(N))  ##Relationship is N/L^3 = (L/latticedistance)^3/L^3   > rho,. It guarantees that the atoms may be put in the cell.
+  println("latticedistance = $latticedistance")
   atoms = Array{Atom,1}(N)
-
   i = 0
   j = 0
   k = 0
-
   #First point on the lattice
-    latticex = ceil(i*latticedistance - 0.5*L)
-    latticey = ceil(j*latticedistance - 0.5*L)
-    latticez = ceil(k*latticedistance - 0.5*L)
+  latticex = i*latticedistance - 0.5*L
+  latticey = j*latticedistance - 0.5*L
+  latticez = k*latticedistance - 0.5*L
 
   atoms[1] = Atom([latticex, latticey, latticez])
 
   #Lattice point where the atoms are put
   for loop in 2:N
     i+=1
-        latticex = ceil(i*latticedistance - 0.5*L)
+    latticex = i*latticedistance - 0.5*L
 
-        if latticex >= ceil(0.5*L)
+    if latticex >= 0.5*L
       i = 0 #Put back to the first position but now second column
-      latticex =  ceil(i*latticedistance - 0.5*L)
+      latticex =  i*latticedistance - 0.5*L
       j += 1
 
     end
 
-    latticey =  ceil(j*latticedistance - 0.5*L)
+    latticey =  j*latticedistance - 0.5*L
 
-        if latticey >= ceil(0.5*L)
+    if latticey >= 0.5*L
       j = 0 #Put back to the first position but now third column
-            latticey = ceil(j*latticedistance - 0.5*L)
+      latticey = j*latticedistance - 0.5*L
       k  += 1
 
     end
 
-        latticez = ceil(k*latticedistance - 0.5*L)
+    latticez = k*latticedistance - 0.5*L
 
     atoms[loop] = Atom([latticex, latticey, latticez])
 
   end
 
   return atoms
-
 end
 
+# function makelattice(N::Int, L::Float64)
+#   latticedistance = ceil(L/(cbrt(N)))  ##Recall that L will be defined as cbrt(N/rho), so basicaly the lattice distance is equal to cbrt(1/rho)
+#   atoms = Array{Atom,1}(N)
+#   i = 0
+#   j = 0
+#   k = 0
+
+#   #First point on the lattice
+#   latticex = ceil(i*latticedistance - 0.5*L)
+#   latticey = ceil(j*latticedistance - 0.5*L)
+#   latticez = ceil(k*latticedistance - 0.5*L)
+
+#   atoms[1] = Atom([latticex, latticey, latticez])
+
+#   #Lattice point where the atoms are put
+#   for loop in 2:N
+#     i+=1
+#     latticex = ceil(i*latticedistance - 0.5*L)
+
+#     if latticex >= ceil(0.5*L)
+#       i = 0 #Put back to the first position but now second column
+#       latticex =  ceil(i*latticedistance - 0.5*L)
+#       j += 1
+#     end
+
+#     latticey =  ceil(j*latticedistance - 0.5*L)
+
+#     if latticey >= ceil(0.5*L)
+#       j = 0 #Put back to the first position but now third column
+#       latticey = ceil(j*latticedistance - 0.5*L)
+#       k  += 1
+#     end
+
+#     latticez = ceil(k*latticedistance - 0.5*L)
+#     atoms[loop] = Atom([latticex, latticey, latticez])
+#   end
+
+#   return atoms
+
+# end
+
 @doc """function that creates the array of N atoms in a lattice of side L, with the temperature given by T"""->
-function initialize(L::Float64, N::Int64, T::Float64)
-  atoms = makelattice(N, L)
+function initialize(L::Float64, N::Int64, T::Float64, rho::Float64)
+  atoms = makelattice(N, L, rho)
 
   K = 0 #Kinetic energy
 
@@ -277,53 +312,67 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64)
   L = cbrt(N/rho)
   numsteps = round(Int, ceil(runtime/dt))
   #Put initial conditions
-  atoms, T, K , U = initialize(L, N, T)
+  atoms, T, K , U = initialize(L, N, T, rho)
   H = U + K
   T = K*2/(dim*N)
 
   time = Array(Float64, numsteps+1)
   energy = Array(Float64, numsteps+1)
-  kineticperparticle = Array(Float64, numsteps+1)
-  potentialperparticle = Array(Float64, numsteps+1)
+  kinetic = Array(Float64, numsteps+1)
+  potential = Array(Float64, numsteps+1)
   temperature = Array(Float64, numsteps+1)
 
 
 
   #Report results
-  println("time, H, U/N, K/N, T")
-  println("0.0, H, $(U/N),  $(K/N), $T")
+  println("time, H, U, K, T")
+  println("0.0, $H, $U,  $K, $T")
 
   time[1] = 0.0
   energy[1] = H
   #kineticperparticle[1] = K/N
   #potentialperparticle[1] = U/N
-  potentialperparticle[1] = U
-  kineticperparticle[1] = K
+  potential[1] = U
+  kinetic[1] = K
   temperature[1] = T
 
 
-
+  i = 1
   #Perform time steps
-  for count in 1:numsteps
-    K, U =integratestep!(atoms, dt, L)
-    H = U + K
-    T = K*2/(dim*N)
+  try
+    for count in 1:numsteps
+      K, U =integratestep!(atoms, dt, L)
+      H = U + K
+      T = K*2/(dim*N)
 
-    time[count+1] = count*dt
-    energy[count+1] = H
-    #kineticperparticle[count+1] = K/N
-    #potentialperparticle[count+1] = U/N
-    potentialperparticle[count+1] = U
-    kineticperparticle[count+1] = K
+      time[count+1] = count*dt
+      energy[count+1] = H
+      #kineticperparticle[count+1] = K/N
+      #potentialperparticle[count+1] = U/N
+      potential[count+1] = U
+      kinetic[count+1] = K
 
-    temperature[count+1] = T
+      temperature[count+1] = T
 
-    #Report results
-    #println("$(count*dt), $H, $(U/N),  $(K/N), $T")
-    println("$(count*dt), $H, $(U),  $(K), $T")
+      #Report results
+      #println("$(count*dt), $H, $(U/N),  $(K/N), $T")
+      println("$(count*dt), $H, $(U),  $(K), $T")
+      i += 1
+    end
+
+  catch y   ##If the simulation is stopped, the arrays calculated until this moment are returende
+    if isa(y, InterruptException)
+      time = time[1:i]
+      energy = energy[1:i]
+      kinetic = kinetic[1:i]
+      potential = potential[1:i]
+      temperature = temperature[1:i]
+      return time, energy, kinetic, potential, temperature
+    end
   end
 
-  return time, energy, kineticperparticle, potentialperparticle, temperature
+
+  return time, energy, kinetic, potential, temperature
 
 end
 
