@@ -61,47 +61,6 @@ function makelattice(N::Int, L::Float64, rho::Float64)
   return atoms
 end
 
-# function makelattice(N::Int, L::Float64)
-#   latticedistance = ceil(L/(cbrt(N)))  ##Recall that L will be defined as cbrt(N/rho), so basicaly the lattice distance is equal to cbrt(1/rho)
-#   atoms = Array{Atom,1}(N)
-#   i = 0
-#   j = 0
-#   k = 0
-
-#   #First point on the lattice
-#   latticex = ceil(i*latticedistance - 0.5*L)
-#   latticey = ceil(j*latticedistance - 0.5*L)
-#   latticez = ceil(k*latticedistance - 0.5*L)
-
-#   atoms[1] = Atom([latticex, latticey, latticez])
-
-#   #Lattice point where the atoms are put
-#   for loop in 2:N
-#     i+=1
-#     latticex = ceil(i*latticedistance - 0.5*L)
-
-#     if latticex >= ceil(0.5*L)
-#       i = 0 #Put back to the first position but now second column
-#       latticex =  ceil(i*latticedistance - 0.5*L)
-#       j += 1
-#     end
-
-#     latticey =  ceil(j*latticedistance - 0.5*L)
-
-#     if latticey >= ceil(0.5*L)
-#       j = 0 #Put back to the first position but now third column
-#       latticey = ceil(j*latticedistance - 0.5*L)
-#       k  += 1
-#     end
-
-#     latticez = ceil(k*latticedistance - 0.5*L)
-#     atoms[loop] = Atom([latticex, latticey, latticez])
-#   end
-
-#   return atoms
-
-# end
-
 @doc """function that creates the array of N atoms in a lattice of side L, with the temperature given by T"""->
 function initialize(L::Float64, N::Int64, T::Float64, rho::Float64)
   atoms = makelattice(N, L, rho)
