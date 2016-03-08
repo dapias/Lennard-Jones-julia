@@ -3,7 +3,7 @@
 # Foundations of molecular simulations)
 
 
-module LennardJones
+module ThermostattedLennardJones
 
 export run, Atom, makelattice
 
@@ -248,7 +248,7 @@ end
 #   return K
 # end
 
-function thermostatstep!(atoms::Array{Atom,1}, thermo::Thermostat, dt::Float64, L::Float64)
+function thermostatstep!(atoms::Array{Atom,1}, thermo::Thermostat, dt::Float64, N::Int64)
 
   momentasquare = 0.0
 
@@ -368,9 +368,9 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
   #Perform time steps
   try
     for count in 1:numsteps
-      thermostatstep!(atoms, dt, thermo)
+      thermostatstep!(atoms,  thermo, dt, N)
       K, U =integratestep!(atoms, dt, L)
-      thermostatstep!(atoms,dt,thermo)
+      thermostatstep!(atoms,thermo, dt, N)
       H = U + K
       T = K*2/(dim*N)
 
