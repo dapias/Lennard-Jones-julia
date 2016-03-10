@@ -97,7 +97,7 @@ function initialize(L::Float64, N::Int64, T::Float64, rho::Float64)
 
   U = computeforces!(atoms, L)
   #Intantaneous kinetic temperature and energy
-  T = K/(dim*N)
+  T = K/(dim*(N-1))
   K = K/2
   return atoms, T, K, U
 end
@@ -241,9 +241,8 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64)
   L = cbrt(N/rho)
   numsteps = round(Int, ceil(runtime/dt))
   #Put initial conditions
-  atoms, T, K , U = initialize(L, N, T, rho)
+  atoms, Tinst, K , U = initialize(L, N, T, rho)
   H = U + K
-  T = K*2/(dim*N)
 
   time = Array(Float64, numsteps+1)
   energy = Array(Float64, numsteps+1)
@@ -256,8 +255,8 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64)
   #Report results
   println("time")
   println(0.0)
-#  println("time, H, U, K, T")
-#  println("0.0, $H, $U,  $K, $T")
+  #  println("time, H, U, K, T")
+  #  println("0.0, $H, $U,  $K, $Tinst")
 
   time[1] = 0.0
   energy[1] = H
@@ -265,7 +264,7 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64)
   #potentialperparticle[1] = U/N
   potential[1] = U
   kinetic[1] = K
-  temperature[1] = T
+  temperature[1] = Tinst
 
 
   i = 1
@@ -274,7 +273,7 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64)
     for count in 1:numsteps
       K, U =integratestep!(atoms, dt, L)
       H = U + K
-      T = K*2/(dim*N)
+      T = K*2/(dim*(N-1))
 
       time[count+1] = count*dt
       energy[count+1] = H
