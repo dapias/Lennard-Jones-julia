@@ -121,9 +121,10 @@ end
 
 @doc """ Determine the interaction force for each pair of particles (i, j)"""->
 function computeforces!(atoms::Array{Atom,1}, L::Float64)
+  #We choose a truncated and shifted LennardJones potential (see Allen and Tildeslley for details)
+  #Note the use of reduced units for epsilon and sigma (strength and relevant length respectively, taken equal to one)
 
-  rc_outer = 3.0 #Outer cutoff radius
-  rc_inner = 2.5 #Inner cutoff radius
+  rc = 2.5 #Inner cutoff radius
   N = length(atoms)
   U = 0.0
 
@@ -143,13 +144,19 @@ function computeforces!(atoms::Array{Atom,1}, L::Float64)
 
       r2 = deltax*deltax + deltay*deltay + deltaz*deltaz
 
-      if r2 < rc_inner*rc_inner
+      if r2 < rc*rc
 
+        r = sqrt(r2)
         r2inverse = 1/r2
         r6inverse = r2inverse * r2inverse * r2inverse
 
-        fij = 48*r2inverse*r6inverse*(r6inverse - 0.5)   #Note the use of reduced units
-        Vij = 4*r6inverse*(r6inverse - 1.)
+
+        Vij = 4*r6inverse*(r6inverse - 1.) - 4*(1/rc^12 - 1/rc^6)-(-48./rc^13 + 24./rc^7)*(r-rc)
+        fij = 48*r2inverse*r6inverse*(r6inverse - 0.5)  + (-48/rc^13 + 24/rc^7)/r
+
+
+
+
         U += Vij
 
         atoms[i].f[1] += fij*deltax
@@ -159,43 +166,6 @@ function computeforces!(atoms::Array{Atom,1}, L::Float64)
         atoms[j].f[1] -= fij*deltax
         atoms[j].f[2] -= fij*deltay
         atoms[j].f[3] -= fij*deltaz
-
-      elseif  rc_inner*rc_inner <= r2 <= rc_outer*rc_outer
-
-        #Considering a smooth cutoof region, between rc_inner and rc_outer
-        #Defined the potential as alpha*Vij with alpha the following function
-        # alpha(r) = (rc_outer - r)^2*(rc_outer - 3*rc_inner + 2*r)/(rc_outer - rc_inner)^3
-
-        r2inverse = 1/r2
-        r6inverse = r2inverse * r2inverse * r2inverse
-        fij = 48*r2inverse*r6inverse*(r6inverse - 0.5)   #Note the use of reduced units
-        Vij = 4*r6inverse*(r6inverse - 1.)
-
-        r = sqrt(r2)
-        d = rc_outer - rc_inner
-        alpha = (rc_outer - r)^2.*(rc_outer - 3*rc_inner + 2*r)/(d)^3
-        fij = alpha*fij + Vij*(-6*(r - rc_outer)*(r - rc_inner)/(d^3.*r))
-        Vij = Vij*alpha
-
-        #r      = sqrt(r2)
-        #x      = (2*r - rc_inner - rc_outer)/(rc_inner - rc_outer)
-        #alpha  = 0.5 - 0.25*x*(x*x - 3.)
-        #dalpha = 1.5*(x*x - 1)/(r*(rc_inner-rc_outer))
-        #fij    = alpha*fij + dalpha*Vij
-        # Vij    = alpha*Vij
-
-        U +=Vij
-
-        atoms[i].f[1] += fij*deltax
-        atoms[i].f[2] += fij*deltay
-        atoms[i].f[3] += fij*deltaz
-
-        atoms[j].f[1] -= fij*deltax
-        atoms[j].f[2] -= fij*deltay
-        atoms[j].f[3] -= fij*deltaz
-
-
-
 
       end
 
@@ -284,8 +254,10 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64)
 
 
   #Report results
-  println("time, H, U, K, T")
-  println("0.0, $H, $U,  $K, $T")
+  println("time")
+  println(0.0)
+#  println("time, H, U, K, T")
+#  println("0.0, $H, $U,  $K, $T")
 
   time[1] = 0.0
   energy[1] = H
@@ -314,8 +286,8 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64)
       temperature[count+1] = T
 
       #Report results
-      #println("$(count*dt), $H, $(U/N),  $(K/N), $T")
-      println("$(count*dt), $H, $(U),  $(K), $T")
+      println("$(count*dt)")
+      #println("$(count*dt), $H, $(U),  $(K), $T")
       i += 1
     end
 
