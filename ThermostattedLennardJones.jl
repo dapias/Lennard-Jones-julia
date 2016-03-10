@@ -231,7 +231,7 @@ function thermostatstep!(atoms::Array{Atom,1}, thermo::Thermostat, dt::Float64, 
     end
   end
 
-  thermo.p_eta  += dt/4.*(-momentasquare + dim*N/thermo.beta)
+  thermo.p_eta  += dt/4.*(-momentasquare + dim*(N-1)/thermo.beta) ##Taking into account the degrees of freedom
 
   for i in 1:N
     for j in 1:dim
@@ -247,7 +247,7 @@ function thermostatstep!(atoms::Array{Atom,1}, thermo::Thermostat, dt::Float64, 
     end
   end
 
-  thermo.p_eta  += dt/4.*(-momentasquare + dim*N/thermo.beta)
+  thermo.p_eta  += dt/4.*(-momentasquare + dim*(N-1)/thermo.beta) ##Taking into account the degrees of freedom
 
   thermo.eta += dt/2.*(1/thermo.beta*frictionNH(thermo.p_eta, thermo))
 
