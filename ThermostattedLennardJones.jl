@@ -28,6 +28,10 @@ Atom(r) = Atom(r,zeros(dim), zeros(dim))
 
 
 ###Extended f'(w)/f(w). In Nosé-Hoover, f(w) is a gaussian function
+function extendedrho(w::Float64,  T::Thermostat)
+    exp(-T.beta*w^2/(2.*T.Q))
+end
+
 function frictionNH(w::Float64, T::Thermostat)
   ###Nosé-Hoover
   return -w/T.Q  ##Q is a parameter that characterizes the distribution
@@ -334,7 +338,7 @@ end
 function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, Q::Float64)
   L = cbrt(N/rho)
   numsteps = round(Int, ceil(runtime/dt))
-  #Put initial conditions
+  #Put initial conditions  (##Why so many T's)
   atoms, T, K , U = initialize(L, N, T, rho)
   H = U + K
   T = K*2/(dim*N)
@@ -361,7 +365,7 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
   potential[1] = U
   kinetic[1] = K
   temperature[1] = T
-  invariant[1] = H
+  invariant[1] = H - log(extendedrho(thermo.p_eta, thermo))/thermo.beta
 
 
   i = 1
@@ -382,7 +386,7 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
       #potentialperparticle[count+1] = U/N
       potential[count+1] = U
       kinetic[count+1] = K
-      invariant[count+1] = H + thermo.eta*(N*dim)/thermo.beta
+      invariant[count+1] = H - log(extendedrho(thermo.p_eta,thermo))/thermo.beta + thermo.eta*(N*dim)/thermo.beta  
 
       temperature[count+1] = T
 
@@ -400,12 +404,12 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
       potential = potential[1:i]
       temperature = temperature[1:i]
       invariant = invariant[1:i]
-      return time, energy, kinetic, potential, temperature, invariant
+      return time, energy, kinetic, potential, temperature, invariant, atoms
     end
   end
 
 
-  return time, energy, kinetic, potential, temperature, invariant
+  return time, energy, kinetic, potential, temperature, invariant, atoms
 end
 
 end
