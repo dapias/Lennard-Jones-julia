@@ -27,14 +27,15 @@ Thermostat(Q, beta, p_eta) = Thermostat(Q, 0.0, p_eta, beta)
 Atom(r) = Atom(r,zeros(dim), zeros(dim))
 
 
-###Extended f'(w)/f(w). In Nosé-Hoover, f(w) is a gaussian function
+###Extended f(w). In Nosé-Hoover, f(w) is a gaussian function
 function extendedrho(w::Float64,  T::Thermostat)
     exp(-T.beta*w^2/(2.*T.Q))
 end
 
+##Friction = f'(w)/f(w)
 function frictionNH(w::Float64, T::Thermostat)
   ###Nosé-Hoover
-  return -w/T.Q  ##Q is a parameter that characterizes the distribution
+  return -T.beta*w/T.Q  ##Q is a parameter that characterizes the distribution
 end
 
 ################
