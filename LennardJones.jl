@@ -64,45 +64,54 @@ end
 @doc """function that creates the array of N atoms in a lattice of side L, with the temperature given by T"""->
 function initialize(L::Float64, N::Int64, T::Float64, rho::Float64)
   atoms = makelattice(N, L, rho)
-
   K = 0 #Kinetic energy
 
   ##The approach for velocities is adapted from the book "Understanding Molecular Dynamics" (Daan Frenkel)
-  sumv = 0.
-  sumv2 = 0.
-  #Initial momentum
+
+  sumv = zeros(dim)
   for i=1:N
     for j=1:dim
-      v = 2*rand() - 1.0
-      sumv += v
-      sumv2 += v*v
+      v = 2*rand() - 1.0  ##Initial velocity in the interval [-1.0, 1.0]
+      sumv[j] += v
       atoms[i].p[j] = v
     end
   end
 
-  ### The point is that the average momentum (p of center of mass) has to be equal to zero. The scale factor
-  ## guarantees that the total kinetic energy is equal to dim/2 times N times kT (k = 1)
-  vaverage =  sumv/(dim*N)
-  scale = sqrt(dim*T*N/(sumv2 - (sumv)^2./(3*N)))
-  println("scale= $scale")
-
-
+  ### The point is that all the components of the average momentum (p of center of mass) have to be equal to zero. Moreover, the scale factor
+  ## guarantees that K = nkT/2
+  vaverage =  sumv/(N)
+  sumv2new = 0.0
 
   for i in 1:N
     for j in 1:dim
-      atoms[i].p[j] = scale*(atoms[i].p[j] - vaverage)
+      atoms[i].p[j] = (atoms[i].p[j] - vaverage[j])
+      sumv2new += atoms[i].p[j]^2
+    end
+  end
+
+  scale = sqrt(dim*(N-1)*T/sumv2new)
+  println("scale= $scale")
+
+  for i in 1:N
+    for j in 1:dim
+      atoms[i].p[j] = scale*atoms[i].p[j]
       K += atoms[i].p[j]^2.
     end
   end
 
+
+
   U = computeforces!(atoms, L)
   #Intantaneous kinetic temperature and energy
-  T = K/(dim*N)
+  T = K/(dim*(N-1))
   K = K/2
+
+  ###Thermostat variables
+  eta = 0.0
+  p_eta = rand()
+
   return atoms, T, K, U
 end
-
-
 
 @doc """Function dealing with periodic boundary conditions. Increases or decreases a number d
 until is bounded by -L/2 <= d < L/2"""->

@@ -29,7 +29,7 @@ Atom(r) = Atom(r,zeros(dim), zeros(dim))
 
 ###Extended f(w). In Nosé-Hoover, f(w) is a gaussian function
 function extendedrho(w::Float64,  T::Thermostat)
-    exp(-T.beta*w^2/(2.*T.Q))
+  exp(-T.beta*w^2/(2.*T.Q))
 end
 
 ##Friction = f'(w)/f(w)
@@ -87,36 +87,42 @@ end
 @doc """function that creates the array of N atoms in a lattice of side L, with the temperature given by T"""->
 function initialize(L::Float64, N::Int64, T::Float64, rho::Float64)
   atoms = makelattice(N, L, rho)
-
   K = 0 #Kinetic energy
 
   ##The approach for velocities is adapted from the book "Understanding Molecular Dynamics" (Daan Frenkel)
-  sumv = 0.
-  sumv2 = 0.
-  #Initial momentum
+
+  sumv = zeros(dim)
   for i=1:N
     for j=1:dim
-      v = 2*rand() - 1.0
-      sumv += v
-      sumv2 += v*v
+      v = 2*rand() - 1.0  ##Initial velocity in the interval [-1.0, 1.0]
+      sumv[j] += v
       atoms[i].p[j] = v
     end
   end
 
-  ### The point is that the average momentum (p of center of mass) has to be equal to zero. The scale factor
-  ## guarantees that the total kinetic energy is equal to dim/2 times N times kT (k = 1)
-  vaverage =  sumv/(dim*N)
-  scale = sqrt(dim*T*N/(sumv2 - (sumv)^2./(3*N)))
-  println("scale= $scale")
-
-
+  ### The point is that all the components of the average momentum (p of center of mass) have to be equal to zero. Moreover, the scale factor
+  ## guarantees that K = nkT/2
+  vaverage =  sumv/(N)
+  sumv2new = 0.0
 
   for i in 1:N
     for j in 1:dim
-      atoms[i].p[j] = scale*(atoms[i].p[j] - vaverage)
+      atoms[i].p[j] = (atoms[i].p[j] - vaverage[j])
+      sumv2new += atoms[i].p[j]^2
+    end
+  end
+
+  scale = sqrt(dim*(N-1)*T/sumv2new)
+  println("scale= $scale")
+
+  for i in 1:N
+    for j in 1:dim
+      atoms[i].p[j] = scale*atoms[i].p[j]
       K += atoms[i].p[j]^2.
     end
   end
+
+
 
   U = computeforces!(atoms, L)
   #Intantaneous kinetic temperature and energy
@@ -150,7 +156,7 @@ end
 @doc """ Determine the interaction force for each pair of particles (i, j)"""->
 function computeforces!(atoms::Array{Atom,1}, L::Float64)
 
- rc = 2.5 #Inner cutoff radius
+  rc = 2.5 #Inner cutoff radius
   N = length(atoms)
   U = 0.0
 
@@ -172,7 +178,7 @@ function computeforces!(atoms::Array{Atom,1}, L::Float64)
 
       if r2 < rc*rc
 
-        r = sqrt(r2)
+        r = sqrt(r2)   ####Check how to get rid of this calculation (how to avoid taking the square root)
         r2inverse = 1/r2
         r6inverse = r2inverse * r2inverse * r2inverse
 
@@ -324,8 +330,8 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
 
 
   #Report results
- # println("time, H, U, K, T")
- # println("0.0, $H, $U,  $K, $Tinst")
+  # println("time, H, U, K, T")
+  # println("0.0, $H, $U,  $K, $Tinst")
 
   println("time")
   println("0.0")
