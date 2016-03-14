@@ -101,12 +101,12 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64)
       kinetic = kinetic[1:i]
       potential = potential[1:i]
       temperature = temperature[1:i]
-      return time, energy, kinetic, potential, temperature, invariant, atoms
+      return time, energy, kinetic, potential, temperature, atoms
     end
   end
 
 
-  return time, energy, kinetic, potential, temperature
+  return time, energy, kinetic, potential, temperature, atoms
 end
 
 
