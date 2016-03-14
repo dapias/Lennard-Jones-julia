@@ -99,9 +99,8 @@ function initialize(L::Float64, N::Int64, T::Float64, rho::Float64)
     end
   end
 
-
-
   U = computeforces!(atoms, L)
+
   #Intantaneous kinetic temperature and energy
   T = K/(dim*(N-1))
   K = K/2

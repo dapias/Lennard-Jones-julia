@@ -122,16 +122,15 @@ function initialize(L::Float64, N::Int64, T::Float64, rho::Float64)
     end
   end
 
-
-
   U = computeforces!(atoms, L)
-  #Intantaneous kinetic temperature and energy
+
+  #Instantaneous kinetic temperature and energy
   T = K/(dim*(N-1))
   K = K/2
 
-  ###Thermostat variables
-  eta = 0.0
-  p_eta = rand()
+  #   ###Thermostat variables
+  #   eta = 0.0
+  #   p_eta = rand()
 
   return atoms, T, K, U
 end
@@ -186,9 +185,6 @@ function computeforces!(atoms::Array{Atom,1}, L::Float64)
         Vij = 4*r6inverse*(r6inverse - 1.) - 4*(1/rc^12 - 1/rc^6)-(-48./rc^13 + 24./rc^7)*(r-rc)
         fij = 48*r2inverse*r6inverse*(r6inverse - 0.5)  + (-48/rc^13 + 24/rc^7)/r
 
-
-
-
         U += Vij
 
         atoms[i].f[1] += fij*deltax
@@ -208,24 +204,6 @@ function computeforces!(atoms::Array{Atom,1}, L::Float64)
 end
 
 
-
-#The integration will be performed using the Verlet method
-
-
-
-# function measureK(atoms::Array{Atom,1})
-#   K = 0
-
-#   for i in 1:length(atoms)
-#     for j in 1:dim
-#       K += atoms[i].p[j]^2.
-#     end
-#   end
-
-#   K = K/2
-
-#   return K
-# end
 
 function thermostatstep!(atoms::Array{Atom,1}, thermo::Thermostat, dt::Float64, N::Int64)
 
@@ -253,17 +231,14 @@ function thermostatstep!(atoms::Array{Atom,1}, thermo::Thermostat, dt::Float64, 
     end
   end
 
-  thermo.p_eta  += dt/4.*(-momentasquare + dim*(N-1)/thermo.beta) ##Taking into account the degrees of freedom
 
   thermo.eta += dt/2.*(1/thermo.beta*frictionNH(thermo.p_eta, thermo))
+
+  thermo.p_eta  += dt/4.*(-momentasquare + dim*(N-1)/thermo.beta) ##Taking into account the degrees of freedom
 
 
 
 end
-
-
-
-
 
 
 
@@ -294,17 +269,28 @@ function integratestep!(atoms::Array{Atom,1}, dt::Float64, L::Float64)
   U = computeforces!(atoms, L)
 
   # final force half-step
-  K = 0.
   for i in 1:N
     for j in 1:dim
       atoms[i].p[j] +=  0.5*dt*atoms[i].f[j]
+    end
+  end
+
+
+
+  return U
+end
+
+function measurekineticenergy(atoms::Array{Atom,1})
+  K = 0.
+  N = length(atoms)
+  for i in 1:N
+    for j in 1:dim
       K +=  atoms[i].p[j]^2.
     end
   end
 
   K = K/2.
-
-  return K, U
+  return K
 end
 
 
@@ -328,6 +314,11 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
   invariant = Array(Float64, numsteps+1)
 
 
+  ## Thermo variables
+  peta = Array(Float64, numsteps+1)
+  etas =  Array(Float64, numsteps+1)
+
+
 
   #Report results
   # println("time, H, U, K, T")
@@ -338,21 +329,23 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
 
   time[1] = 0.0
   energy[1] = H
-  #kineticperparticle[1] = K/N
-  #potentialperparticle[1] = U/N
   potential[1] = U
   kinetic[1] = K
   temperature[1] = Tinst
   invariant[1] = H - log(extendedrho(thermo.p_eta, thermo))/thermo.beta
 
+  ##Thermo variables
+  peta[1] = thermo.p_eta
+  etas[1] = thermo.eta
 
   i = 1
   #Perform time steps
   try
     for count in 1:numsteps
       thermostatstep!(atoms,  thermo, dt, N)
-      K, U =integratestep!(atoms, dt, L)
+      U =integratestep!(atoms, dt, L)
       thermostatstep!(atoms,thermo, dt, N)
+      K = measurekineticenergy(atoms)  ##The potential energy can be measured before applied the thermostat because the thermostat does not affect the positions.
       H = U + K
       T = K*2/(dim*(N-1))  ##Considering the degrees of freedom
 
@@ -364,10 +357,18 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
       #potentialperparticle[count+1] = U/N
       potential[count+1] = U
       kinetic[count+1] = K
-      invariant[count+1] = H - log(extendedrho(thermo.p_eta,thermo))/thermo.beta + thermo.eta*(N*dim)/thermo.beta
-
+      #invariant[count+1] = H - log(extendedrho(thermo.p_eta,thermo))/thermo.beta + thermo.eta*((N-1)*dim)/thermo.beta  ##This quantity may have a numerical overflow due
+      #to it is equal to extendedrho is equal to exp(-peta^2). It is better to use the analytical form for log(extended(rho))
+      invariant[count+1] = H + thermo.p_eta^2/(2*thermo.Q) + thermo.eta*((N-1)*dim)/thermo.beta
       temperature[count+1] = T
 
+      ####Thermo variables
+
+      peta[count + 1] = thermo.p_eta
+      etas[count + 1] = thermo.eta
+
+
+      #############################
       #Report results
       #println("$(count*dt), $H, $(U),  $(K), $T")
       println("$(count*dt)")
@@ -382,12 +383,12 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
       potential = potential[1:i]
       temperature = temperature[1:i]
       invariant = invariant[1:i]
-      return time, energy, kinetic, potential, temperature, invariant, atoms
+      return time, energy, kinetic, potential, temperature, invariant, atoms, peta, etas
     end
   end
 
 
-  return time, energy, kinetic, potential, temperature, invariant, atoms
+  return time, energy, kinetic, potential, temperature, invariant, atoms, peta,etas
 end
 
 end
