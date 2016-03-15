@@ -58,17 +58,17 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
   potential = Array(Float64, numsteps+1)
   temperature = Array(Float64, numsteps+1)
   invariant = Array(Float64, numsteps+1)
+  vrandomatom =  Array(Float64, numsteps+1)
 
 
   ## Thermo variables
   peta = Array(Float64, numsteps+1)
   etas =  Array(Float64, numsteps+1)
 
+  ## Selecting an atom to study the distribution of a component of the velocity with time
+  randomatom = atoms[2]
+  vrandomatom[1] = randomatom.p[2]
 
-
-  #Report results
-  # println("time, H, U, K, T")
-  # println("0.0, $H, $U,  $K, $Tinst")
 
   println("time")
   println("0.0")
@@ -105,13 +105,15 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
       kinetic[count+1] = K
       invariant[count+1] = H - logrhoextended(thermo)/thermo.beta + thermo.eta*((N-1)*dim)/thermo.beta  ##This quantity may have a numerical overflow due
       #to it is equal to extendedrho is equal to exp(-peta^2). It is better to use the analytical form for log(extended(rho))
-     # invariant[count+1] = H + thermo.p_eta^2/(2*thermo.Q) + thermo.eta*((N-1)*dim)/thermo.beta
+      # invariant[count+1] = H + thermo.p_eta^2/(2*thermo.Q) + thermo.eta*((N-1)*dim)/thermo.beta
       temperature[count+1] = T
 
       ####Thermo variables
 
       peta[count + 1] = thermo.p_eta
       etas[count + 1] = thermo.eta
+
+      vrandomatom[i] = randomatom.p[2]
 
 
       #############################
@@ -131,13 +133,14 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
       invariant = invariant[1:i]
       peta = peta[1:i]
       etas = etas[1:i]
+      vrandomatom = vrandomatom[1:i]
 
-      return time, energy, kinetic, potential, temperature, invariant, atoms, peta, etas
+      return time, energy, kinetic, potential, temperature, invariant, atoms, peta, etas, vrandomatom
     end
   end
 
 
-  return time, energy, kinetic, potential, temperature, invariant, atoms, peta,etas
+  return time, energy, kinetic, potential, temperature, invariant, atoms, peta,etas, vrandomatom
 end
 
 end
