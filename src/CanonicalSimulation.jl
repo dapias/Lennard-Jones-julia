@@ -46,14 +46,15 @@ function thermostatstep!(atoms::Array{Atom,1}, thermo::Thermostat, dt::Float64, 
 
 end
 
-function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, Q::Float64)
+function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, Q::Float64, thermotype::ASCIIString)
   L = cbrt(N/rho)
   numsteps = round(Int, ceil(runtime/dt))
   atoms, Tinst, K , U = initialize(L, N, T, rho)
   H = U + K
 
+  thermomodel = eval(parse(thermotype))
 
-  thermo = Thermostat(Q, 1/T)
+  thermo = thermomodel(Q, 1/T)
 
   time = Array(Float64, numsteps+1)
   energy = Array(Float64, numsteps+1)
