@@ -1,5 +1,7 @@
 include("../src/CanonicalSimulation.jl")
 
+##Module that checks conservation of the three components of the momentum for the center of mass
+
 using LennardJonesModel
 using MicrocanonicalSimulation
 using CanonicalSimulation
@@ -55,7 +57,7 @@ facts("Conserved Linear Momenta After 100 steps (Microcanonical ensemble) ") do
   @fact abs(momenta[3]) < 1.0e-10 --> true
 end
 
-facts("Conserved Linear Momenta After 100 steps (Microcanonical ensemble) ") do
+facts("Conserved Linear Momenta After 100 steps (Canonical ensemble) ") do
 
   time, energy, kinetic, potential, temperature, invariant, atoms = CanonicalSimulation.run(runtime, rho, dt, T, N, Q)
 
