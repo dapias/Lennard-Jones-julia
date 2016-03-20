@@ -93,10 +93,10 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
     for count in 1:numsteps
 
       thermostatstep!(atoms,  thermo, dt, N)
-      U =integratestep!(atoms, dt, L)
+      U =integratestep!(atoms, dt, L)    ##It  can be measured before of applying the thermostat because the thermostat does not affect the positions.
       thermostatstep!(atoms,thermo, dt, N)
 
-      K = measurekineticenergy(atoms)  ##The potential energy can be measured before applied the thermostat because the thermostat does not affect the positions.
+      K = measurekineticenergy(atoms)
       H = U + K
       T = K*2/(dim*(N-1))  ##Considering the degrees of freedom
 
@@ -116,7 +116,7 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
       peta[count + 1] = thermo.p_eta
       etas[count + 1] = thermo.eta
 
-      vrandomatom[i] = randomatom.p[2]
+      vrandomatom[count+1] = randomatom.p[2]
 
 
       #############################
