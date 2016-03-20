@@ -6,6 +6,7 @@ using LennardJonesModel
 
 export integratestep!, run
 
+@doc """Function that implements the velocity Verlet algorithm to integrate the equations of motion with step size `dt`"""->
 function integratestep!(atoms::Array{Atom,1}, dt::Float64, L::Float64)
   N = length(atoms)
 
@@ -21,8 +22,6 @@ function integratestep!(atoms::Array{Atom,1}, dt::Float64, L::Float64)
   for i in 1:N
     for j in 1:dim
       atoms[i].r[j] += dt*atoms[i].p[j]
-      #  atoms[i].r[j] = makePeriodic(atoms[i].r[j],L)
-
     end
   end
 
@@ -75,10 +74,10 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64)
   try
     for count in 1:numsteps
       U = integratestep!(atoms, dt, L)
-      K = measurekineticenergy(atoms)  ##The potential energy can be measured before applied the thermostat because the thermostat does not affect the positions.
+      K = measurekineticenergy(atoms)
       H = U + K
 
-      T = K*2/(dim*(N-1))  ##Considering the degrees of freedom
+      T = K*2/(dim*(N-1))
 
 
 
@@ -94,7 +93,7 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64)
       i += 1
     end
 
-  catch y   ##If the simulation is stopped, the arrays calculated until this moment are returende
+  catch y   ##If the simulation is stopped, the arrays calculated until this moment are returned
     if isa(y, InterruptException)
       time = time[1:i]
       energy = energy[1:i]
