@@ -12,7 +12,7 @@ end
 
 Atom(r) = Atom(r,zeros(dim), zeros(dim))
 
-function makelattice(N::Int, L::Float64, rho::Float64)
+function makelattice(N::Int, L::Float64)
   latticedistance = L/ceil(cbrt(N))  ##Relationship is N/L^3 = (L/latticedistance)^3/L^3   > rho,. It guarantees that the atoms may be put in the cell.
   println("latticedistance = $latticedistance")
   atoms = Array{Atom,1}(N)
@@ -58,7 +58,7 @@ end
 
 @doc """function that creates the array of N atoms in a lattice of side L, with the temperature given by T"""->
 function initialize(L::Float64, N::Int64, T::Float64, rho::Float64)
-  atoms = makelattice(N, L, rho)
+  atoms = makelattice(N, L)
   K = 0 #Kinetic energy
 
   ##The approach for velocities is adapted from the book "Understanding Molecular Dynamics" (Daan Frenkel)
