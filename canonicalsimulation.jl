@@ -43,6 +43,7 @@ attrs(file)["N"] = N
 attrs(file)["T"] = T
 attrs(file)["deltat"] = dt
 attrs(file)["Q"] = Q
+attrs(file)["rho"] = rho
 
 results =  CanonicalSimulation.run(runtime, rho, dt, T, N, Q, thermoname)
 
@@ -72,5 +73,4 @@ file["vrandatom"] = vrandatom
 
 close(file)
 
-println("The simulation was succesfully done. \nOutput in .
-/data/$(thermoname)/HDF5/$filename.hdf5")
+println("The simulation was succesfully done. \nOutput in ./data/$(thermoname)/HDF5/$filename.hdf5")
