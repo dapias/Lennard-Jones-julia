@@ -1,0 +1,16 @@
+#Parameters tested for the gaussian distribution
+# N: 343
+# rho: 1.0
+# T: 0.1
+# dt: 0.001
+# runtime: 40.0
+# Q: 2.0
+
+##Parameters used by Cho, Joannopoulos, PRA 1992, Volume 45, Number 10, 7089-7097
+
+N: 32
+rho: 0.8
+T: 1.5
+dt: 0.0005
+runtime: 150.0
+Q: 10.0
