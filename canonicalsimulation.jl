@@ -25,7 +25,7 @@ filename = name[1:end-1]
 while isfile("./data/$(thermoname)/HDF5/$filename.hdf5")
   println("The filename typed already exists in the HDF5 folder. Try another one:")
   filename = string(readline(STDIN))
-  filename = name[1:end-1]
+  filename = filename[1:end-1]
 end
 
 parameters = YAML.load(open("parameterscanonical.yaml"))
