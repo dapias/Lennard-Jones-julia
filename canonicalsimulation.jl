@@ -4,6 +4,17 @@ import YAML
 using CanonicalSimulation
 using HDF5
 
+try
+  mkdir("./data/")
+  mkdir("./data/Gaussian/")
+  mkdir("./data/Logistic/")
+  mkdir("./data/Quartic/")
+  mkdir("./data/Gaussian/HDF5/")
+  mkdir("./data/Logistic/HDF5/")
+  mkdir("./data/Quartic/HDF5/")
+end
+
+
 println("Type the kind of the thermostat (Gaussian, Logistic or Quartic) \n Case sensitive")
 thermostat = string(readline(STDIN))
 thermoname = thermostat[1:end-1]
