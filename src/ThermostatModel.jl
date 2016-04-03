@@ -8,23 +8,23 @@ abstract Thermostat
 
 type Gaussian{T} <: Thermostat
   Q::T ##Parameter that characterizes the distribution
-  eta::T
-  p_eta::T
+  nu::T
+  zeta::T
   beta::T
 end
 
-Gaussian(Q, beta) = Gaussian(Q, 0.0, rand(), beta)    ##May change the default 0.0 by rand() for eta
-Gaussian(Q, beta, p_eta) = Gaussian(Q, 0.0, p_eta, beta)
+Gaussian(Q, beta) = Gaussian(Q, 0.0, rand(), beta)    ##May change the default 0.0 by rand() for nu
+Gaussian(Q, beta, zeta) = Gaussian(Q, 0.0, zeta, beta)
 
 
 @doc """Logarithm of the distibution in the extended space (f(w))"""->
 function logrhoextended(T::Gaussian)
-  -T.beta*T.p_eta^2/(2.*T.Q)
+  -T.beta*T.zeta^2/(2.*T.Q)
 end
 
 @doc """Friction coefficient f'(w)/f(w)"""->
 function friction(T::Gaussian)
-  return -T.beta*T.p_eta/T.Q
+  return -T.beta*T.zeta/T.Q
 end
 ####################################################
 
@@ -33,39 +33,39 @@ end
 
 type Logistic{T} <: Thermostat
   Q::T ##Parameter that characterizes the distribution
-  eta::T
-  p_eta::T
+  nu::T
+  zeta::T
   beta::T
 end
 
-Logistic(Q, beta) = Logistic(Q, 0.0, rand(), beta)    ##May change the default 0.0 by rand() for eta
-Logistic(Q, beta, p_eta) = Logistic(Q, 0.0, p_eta, beta)
+Logistic(Q, beta) = Logistic(Q, 0.0, rand(), beta)    ##May change the default 0.0 by rand() for nu
+Logistic(Q, beta, zeta) = Logistic(Q, 0.0, zeta, beta)
 
 #With the mean as Q
 
 function logrhoextended(T::Logistic)
-  z = T.p_eta-T.Q
+  z = T.zeta-T.Q
   distribution = exp(z)/((1+exp(z))^2)
   log(distribution)
 end
 
 @doc """Friction coefficient f'(w)/f(w)"""->
 function friction(T::Logistic)
-  z = T.p_eta-T.Q
+  z = T.zeta-T.Q
   (1 - exp(z))/(1+exp(z))
 end
 
 ##With the standard deviation as Q (Looks worse than with the mean)
 
 # function logrhoextended(T::Thermostat)
-#   z = T.p_eta/T.Q
+#   z = T.zeta/T.Q
 #   distribution = exp(z)/(T.Q*(1+exp(z))^2)
 #   log(distribution)
 # end
 
 # @doc """Friction coefficient f'(w)/f(w)"""->
 # function friction(T::Thermostat)
-#   z = T.p_eta/T.Q
+#   z = T.zeta/T.Q
 #   (1 - exp(z))/(T.Q*(1+exp(z)))
 # end
 
@@ -74,22 +74,22 @@ end
 ############Distribution that Fukuda uses###############
 type Quartic{T} <: Thermostat
   Q::T ##Parameter that characterizes the distribution
-  eta::T
-  p_eta::T
+  nu::T
+  zeta::T
   beta::T
 end
 
-Quartic(Q, beta) = Quartic(Q, 0.0, rand(), beta)    ##May change the default 0.0 by rand() for eta
-Quartic(Q, beta, p_eta) = Quartic(Q, 0.0, p_eta, beta)
+Quartic(Q, beta) = Quartic(Q, 0.0, rand(), beta)    ##May change the default 0.0 by rand() for nu
+Quartic(Q, beta, zeta) = Quartic(Q, 0.0, zeta, beta)
 
 # # @doc """Logarithm of the distibution in the extended space (f(w))"""->
 function logrhoextended(T::Quartic)
-  -T.Q*T.p_eta^4
+  -T.Q*T.zeta^4
 end
 
 @doc """Friction coefficient f'(w)/f(w)"""->
 function friction(T::Quartic)
-  return -4*T.Q*T.p_eta^3
+  return -4*T.Q*T.zeta^3
 end
 ####################################################
 
@@ -100,27 +100,27 @@ end
 #monotonous without oscillations. It doesn't seem to work)
 ##T.Q is the gamma in the distribution (it doesn't seem to work)
 # function logrhoextended(T::Thermostat)
-#   z = T.p_eta^2 + T.Q^2
+#   z = T.zeta^2 + T.Q^2
 #   distribution = T.Q/(pi*z)
 #   log(distribution)
 # end
 
 # @doc """Friction coefficient f'(w)/f(w)"""->
 # function friction(T::Thermostat)
-#   z = T.p_eta^2 + T.Q^2
-#   -2*T.p_eta/z
+#   z = T.zeta^2 + T.Q^2
+#   -2*T.zeta/z
 # end
 
 ##T.Q is x_0 in the distribution
 # function logrhoextended(T::Thermostat)
-#   z = T.p_eta - T.Q
+#   z = T.zeta - T.Q
 #   distribution = 1/(pi*(1+z^2.))
 #   log(distribution)
 # end
 
 # @doc """Friction coefficient f'(w)/f(w)"""->
 # function friction(T::Thermostat)
-#   z = T.p_eta - T.Q
+#   z = T.zeta - T.Q
 #   -2*z/(1+z^2.)
 # end
 ###################################################

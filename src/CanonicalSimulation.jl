@@ -22,9 +22,9 @@ function thermostatstep!(atoms::Array{Atom,1}, thermo::Thermostat, dt::Float64, 
     end
   end
 
-  thermo.p_eta  += dt/4.*(momentasquare - dim*(N-1)/thermo.beta) ##Taking into account the degrees of freedom
+  thermo.zeta  += dt/4.*(momentasquare - dim*(N-1)/thermo.beta) ##Taking into account the degrees of freedom
 
-  thermo.eta -= dt/2.*(friction(thermo)/thermo.beta)
+  thermo.nu -= dt/2.*(friction(thermo)/thermo.beta)
 
 
   for i in 1:N
@@ -33,7 +33,7 @@ function thermostatstep!(atoms::Array{Atom,1}, thermo::Thermostat, dt::Float64, 
     end
   end
 
-  thermo.p_eta  += dt/4.*(exp(dt*friction(thermo)/thermo.beta)*momentasquare - dim*(N-1)/thermo.beta) ##Taking into account the degrees of freedom
+  thermo.zeta  += dt/4.*(exp(dt*friction(thermo)/thermo.beta)*momentasquare - dim*(N-1)/thermo.beta) ##Taking into account the degrees of freedom
 
 end
 
@@ -57,8 +57,8 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
 
 
   ## Thermo variables
-  peta = Array(Float64, numsteps+1)
-  etas =  Array(Float64, numsteps+1)
+  zetas = Array(Float64, numsteps+1)
+  nus =  Array(Float64, numsteps+1)
 
   ## Selecting an atom to study the distribution of a component of the velocity with time
   randomatom = atoms[2]
@@ -73,11 +73,11 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
   potential[1] = U
   kinetic[1] = K
   temperature[1] = Tinst
-  invariant[1] = H - logrhoextended(thermo)/thermo.beta + thermo.eta*((N-1)*dim)/thermo.beta
+  invariant[1] = H - logrhoextended(thermo)/thermo.beta + thermo.nu*((N-1)*dim)/thermo.beta
 
   ##Thermo variables
-  peta[1] = thermo.p_eta
-  etas[1] = thermo.eta
+  zetas[1] = thermo.zeta
+  nus[1] = thermo.nu
 
   i = 1
   #Perform time steps
@@ -98,15 +98,15 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
       energy[count+1] = H
       potential[count+1] = U
       kinetic[count+1] = K
-      invariant[count+1] = H - logrhoextended(thermo)/thermo.beta + thermo.eta*((N-1)*dim)/thermo.beta  ##This quantity may have a numerical overflow due
-      #to it is equal to extendedrho is equal to exp(-peta^2). It is better to use the analytical form for log(extended(rho))
-      # invariant[count+1] = H + thermo.p_eta^2/(2*thermo.Q) + thermo.eta*((N-1)*dim)/thermo.beta
+      invariant[count+1] = H - logrhoextended(thermo)/thermo.beta + thermo.nu*((N-1)*dim)/thermo.beta  ##This quantity may have a numerical overflow due
+      #to it is equal to extendedrho is equal to exp(-zeta^2). It is better to use the analytical form for log(extended(rho))
+      # invariant[count+1] = H + thermo.zeta^2/(2*thermo.Q) + thermo.nu*((N-1)*dim)/thermo.beta
       temperature[count+1] = T
 
       ####Thermo variables
 
-      peta[count + 1] = thermo.p_eta
-      etas[count + 1] = thermo.eta
+      zetas[count + 1] = thermo.zeta
+      nus[count + 1] = thermo.nu
 
       vrandomatom[count+1] = randomatom.p[2]
 
@@ -126,16 +126,16 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
       potential = potential[1:i]
       temperature = temperature[1:i]
       invariant = invariant[1:i]
-      peta = peta[1:i]
-      etas = etas[1:i]
+      zetas = zetas[1:i]
+      nus = nus[1:i]
       vrandomatom = vrandomatom[1:i]
 
-      return time, energy, kinetic, potential, temperature, invariant, atoms, peta, etas, vrandomatom
+      return time, energy, kinetic, potential, temperature, invariant, atoms, zetas, nus, vrandomatom
     end
   end
 
 
-  return time, energy, kinetic, potential, temperature, invariant, atoms, peta,etas, vrandomatom
+  return time, energy, kinetic, potential, temperature, invariant, atoms, zetas,nus, vrandomatom
 end
 
 end

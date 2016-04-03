@@ -17,9 +17,9 @@ N = 32 #(Value used by Cho and Joannopolous)
 rho = 0.8
 T = 1.5
 dt = 0.0005
-runtime = 1.0
+runtime = 150.0
 Q = 2.0
-thermotype = "Gaussian"
+thermotype = "Logistic"
 
-time, energy, kinetic, potential, temperature, invariant, atoms, peta, etas, vrandomatom = CanonicalSimulation.run(runtime, rho, dt, T, N, Q,
+time, energy, kinetic, potential, temperature, invariant, atoms, zeta, nu, vrandomatom = CanonicalSimulation.run(runtime, rho, dt, T, N, Q,
                                                                                                                    thermotype);

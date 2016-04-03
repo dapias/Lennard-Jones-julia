@@ -67,8 +67,8 @@ potential = results[4]
 temperature = results[5]
 invariant = results[6]
 atoms = results[7]   ###For the moment, I don't save it in HDF5 file
-peta = results[8]
-etas = results[9]
+zeta = results[8]
+nu = results[9]
 vrandatom = results[10]
 
 file["t"] = time
@@ -78,8 +78,8 @@ file["K"] = kinetic
 file["U"] = potential
 file["T"] = temperature
 file["invariant"] = invariant
-file["peta"] = peta
-file["eta"] = etas
+file["zeta"] = zeta
+file["nu"] = nu
 file["vrandatom"] = vrandatom
 
 
