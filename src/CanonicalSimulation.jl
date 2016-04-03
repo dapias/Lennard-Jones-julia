@@ -85,7 +85,7 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
     for count in 1:numsteps
 
       thermostatstep!(atoms,  thermo, dt, N)
-      U =integratestep!(atoms, dt, L)    ##It  can be measured before of applying the thermostat because the thermostat does not affect the positions.
+      U =verlet!(atoms, dt, L)    ##It  can be measured before of applying the thermostat because the thermostat does not affect the positions.
       thermostatstep!(atoms,thermo, dt, N)
 
       K = measurekineticenergy(atoms)

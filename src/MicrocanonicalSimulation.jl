@@ -4,10 +4,10 @@ module MicrocanonicalSimulation
 
 using LennardJonesModel
 
-export integratestep!, run
+export verlet!, run
 
 @doc """Function that implements the velocity Verlet algorithm to integrate the equations of motion with step size `dt`"""->
-function integratestep!(atoms::Array{Atom,1}, dt::Float64, L::Float64)
+function verlet!(atoms::Array{Atom,1}, dt::Float64, L::Float64)
   N = length(atoms)
 
 
@@ -73,7 +73,7 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64)
   #Perform time steps
   try
     for count in 1:numsteps
-      U = integratestep!(atoms, dt, L)
+      U = verlet!(atoms, dt, L)
       K = measurekineticenergy(atoms)
       H = U + K
 
