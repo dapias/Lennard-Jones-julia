@@ -98,9 +98,7 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
       energy[count+1] = H
       potential[count+1] = U
       kinetic[count+1] = K
-      invariant[count+1] = H - logrhoextended(thermo)/thermo.beta + thermo.nu*((N-1)*dim)/thermo.beta  ##This quantity may have a numerical overflow due
-      #to it is equal to extendedrho is equal to exp(-zeta^2). It is better to use the analytical form for log(extended(rho))
-      # invariant[count+1] = H + thermo.zeta^2/(2*thermo.Q) + thermo.nu*((N-1)*dim)/thermo.beta
+      invariant[count+1] = H - logrhoextended(thermo)/thermo.beta + thermo.nu*((N-1)*dim)/thermo.beta
       temperature[count+1] = T
 
       ####Thermo variables
