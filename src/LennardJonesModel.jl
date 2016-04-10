@@ -1,6 +1,6 @@
 module LennardJonesModel
 
-export initialize, computeforces!, measurekineticenergy, Atom, dim
+export initialize, computeenergyandforces!, measurekineticenergy, Atom, dim
 
 const dim = 3
 
@@ -94,7 +94,7 @@ function initialize(L::Float64, N::Int64, T::Float64, rho::Float64)
     end
   end
 
-  U = computeforces!(atoms, L)
+  U = computeenergyandforces!(atoms, L)
 
   #Instantaneous kinetic temperature and energy
   T = K/(dim*(N-1))
@@ -119,7 +119,7 @@ end
 
 
 @doc """ Determine the interaction force for each pair of particles (i, j)"""->
-function computeforces!(atoms::Array{Atom,1}, L::Float64)
+function computeenergyandforces!(atoms::Array{Atom,1}, L::Float64)
 
   rc = 2.5 #Inner cutoff radius
   N = length(atoms)

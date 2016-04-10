@@ -37,6 +37,19 @@ function thermostatstep!(atoms::Array{Atom,1}, thermo::Thermostat, dt::Float64, 
 
 end
 
+
+function initializearrays(numsteps::Int)
+  time = Array(Float64, numsteps+1)
+  energy = Array(Float64, numsteps+1)
+  kinetic = Array(Float64, numsteps+1)
+  potential = Array(Float64, numsteps+1)
+  temperature = Array(Float64, numsteps+1)
+  invariant = Array(Float64, numsteps+1)
+  vrandomatom =  Array(Float64, numsteps+1)
+
+  return time, energy, kinetic, potential, temperature, invariant, vrandomatom
+end
+
 function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, Q::Float64, thermotype::ASCIIString)
   L = cbrt(N/rho)
   numsteps = round(Int, ceil(runtime/dt))
@@ -47,13 +60,7 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
 
   thermo = thermomodel(Q, 1/T)
 
-  time = Array(Float64, numsteps+1)
-  energy = Array(Float64, numsteps+1)
-  kinetic = Array(Float64, numsteps+1)
-  potential = Array(Float64, numsteps+1)
-  temperature = Array(Float64, numsteps+1)
-  invariant = Array(Float64, numsteps+1)
-  vrandomatom =  Array(Float64, numsteps+1)
+  time, energy, kinetic, potential, temperature, invariant, vrandomatom = initializearrays(numsteps)
 
 
   ## Thermo variables

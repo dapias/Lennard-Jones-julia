@@ -28,7 +28,7 @@ function verlet!(atoms::Array{Atom,1}, dt::Float64, L::Float64)
 
 
   # positions were changed, so recompute the forces
-  U = computeforces!(atoms, L)
+  U = computeenergyandforces!(atoms, L)
 
   # final force half-step
   for i in 1:N
@@ -42,6 +42,18 @@ function verlet!(atoms::Array{Atom,1}, dt::Float64, L::Float64)
   return U
 end
 
+function initializearrays(numsteps::Int)
+  time = Array(Float64, numsteps+1)
+  energy = Array(Float64, numsteps+1)
+  kinetic = Array(Float64, numsteps+1)
+  potential = Array(Float64, numsteps+1)
+  temperature = Array(Float64, numsteps+1)
+
+  return time, energy, kinetic, potential, temperature
+end
+
+
+
 
 function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64)
   L = cbrt(N/rho)
@@ -50,15 +62,8 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64)
   atoms, Tinst, K , U = initialize(L, N, T, rho)
   H = U + K
 
-  time = Array(Float64, numsteps+1)
-  energy = Array(Float64, numsteps+1)
-  kinetic = Array(Float64, numsteps+1)
-  potential = Array(Float64, numsteps+1)
-  temperature = Array(Float64, numsteps+1)
+  time, energy, kinetic, potential, temperature = initializearrays(numsteps)
 
-  #Report results
-  # println("time, H, U, K, T")
-  # println("0.0, $H, $U,  $K, $Tinst")
 
   println("time")
   println("0.0")
