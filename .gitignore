@@ -1,7 +1,5 @@
 */.ipynb_checkpoints/*
-./data
-./data/*
 *.param
 ./src/makelatticecubiccell.jl
-.smt/*
+.smt/
 data/
