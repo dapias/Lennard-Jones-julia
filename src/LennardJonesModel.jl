@@ -3,6 +3,7 @@ module LennardJonesModel
 export initialize, computeenergyandforces!, measurekineticenergy, Atom, dim
 
 const dim = 3
+const rc = 2.5 ##Cutoff radius LennardJones Potential
 
 type Atom{T}
   r::Array{T,1}
@@ -12,53 +13,57 @@ end
 
 Atom(r) = Atom(r,zeros(dim), zeros(dim))
 
-function makelattice(N::Int, L::Float64)
-  latticedistance = L/ceil(cbrt(N))  ##Relationship is N/L^3 = (L/latticedistance)^3/L^3   > rho,. It guarantees that the atoms may be put in the cell.
-  println("latticedistance = $latticedistance")
-  atoms = Array{Atom,1}(N)
-  i = 0
-  j = 0
-  k = 0
-  #First point on the lattice
-  latticex = i*latticedistance - 0.5*L
-  latticey = j*latticedistance - 0.5*L
-  latticez = k*latticedistance - 0.5*L
 
-  atoms[1] = Atom([latticex, latticey, latticez])
+function makelattice(N::Int, rho::Float64)
+  L = cbrt(N/rho)
 
-  #Lattice point where the atoms are put
-  for loop in 2:N
-    i+=1
-    latticex = i*latticedistance - 0.5*L
-
-    if latticex >= 0.5*L
-      i = 0 #Put back to the first position but now second column
-      latticex =  i*latticedistance - 0.5*L
-      j += 1
-
-    end
-
-    latticey =  j*latticedistance - 0.5*L
-
-    if latticey >= 0.5*L
-      j = 0 #Put back to the first position but now third column
-      latticey = j*latticedistance - 0.5*L
-      k  += 1
-
-    end
-
-    latticez = k*latticedistance - 0.5*L
-
-    atoms[loop] = Atom([latticex, latticey, latticez])
-
+  if L/2. < rc
+    error("The given parameters violate the condition ```Length of simulation cell/2 > rc```. Please decrease the density or increase the number of particles.")
   end
 
-  return atoms
+  # find M large enough to fit N atoms on the simulation cell with unit cell fcc
+  ## There are 4 atoms that generate the simulation cell by translation
+
+  M = 1
+  while (4*M^3. < N)
+    M += 1
+  end
+
+  latticedistance = L / M;   #This lattice distance guarantees that the atoms may be arranged in the cell.
+
+
+
+  ##4 atomic positions (base) in the fcc cell
+
+  xcell = [0.25,0.75, 0.75, 0.25]
+  ycell = [0.25,0.75, 0.25, 0.75]
+  zcell = [0.25,0.25, 0.75, 0.75]
+
+  atoms = Array{Atom,1}(N)
+
+  n = 1
+  for x in 0:M-1
+    for y in 0:M-1
+      for z in 0:M-1
+        for k in 1:4
+          latticex = (x + xcell[k])*latticedistance - L/2.
+          latticey = (y + ycell[k])*latticedistance - L/2.
+          latticez = (z + zcell[k])*latticedistance -L/2.
+          if n <= N
+            atoms[n] = Atom([latticex, latticey, latticez])
+            n += 1
+          end
+        end
+      end
+    end
+  end
+
+  return atoms, L
 end
 
 @doc """function that creates the array of N atoms in a lattice of side L, with the temperature given by T"""->
-function initialize(L::Float64, N::Int64, T::Float64, rho::Float64)
-  atoms = makelattice(N, L)
+function initialize(N::Int64, T::Float64, rho::Float64)
+  atoms, L = makelattice(N, rho)
   K = 0 #Kinetic energy
 
   ##The approach for velocities is adapted from the book "Understanding Molecular Dynamics" (Daan Frenkel)
@@ -100,7 +105,7 @@ function initialize(L::Float64, N::Int64, T::Float64, rho::Float64)
   T = K/(dim*(N-1))
   K = K/2
 
-  return atoms, T, K, U
+  return atoms, T, K, U, L
 end
 
 @doc """Function dealing with periodic boundary conditions. Increases or decreases a number d
@@ -121,7 +126,7 @@ end
 @doc """ Determine the interaction force for each pair of particles (i, j)"""->
 function computeenergyandforces!(atoms::Array{Atom,1}, L::Float64)
 
-  rc = 2.5 #Inner cutoff radius
+  # rc = 2.5 #Inner cutoff radius
   N = length(atoms)
   U = 0.0
 

@@ -51,9 +51,10 @@ function initializearrays(numsteps::Int)
 end
 
 function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, Q::Float64, thermotype::ASCIIString)
-  L = cbrt(N/rho)
+
+
   numsteps = round(Int, ceil(runtime/dt))
-  atoms, Tinst, K , U = initialize(L, N, T, rho)
+  atoms, Tinst, K , U, L = initialize(N, T, rho)
   H = U + K
 
   thermomodel = eval(parse(thermotype))
