@@ -90,7 +90,6 @@ function initialize(N::Int64, T::Float64, rho::Float64)
   end
 
   scale = sqrt(dim*(N-1)*T/sumv2new)
-  println("scale= $scale")
 
   for i in 1:N
     for j in 1:dim
