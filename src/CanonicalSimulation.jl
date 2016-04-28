@@ -9,9 +9,12 @@ using LennardJonesModel
 using MicrocanonicalSimulation
 using ThermostatModel
 
-
+"""
+Function that corresponds to the operator L_{th} (see equation ___ in paper)
+"""
 function thermostatstep!(atoms::Array{Atom,1}, thermo::Thermostat, dt::Float64, N::Int64)
 
+  n = dim*(N-1)
   momentasquare = 0.0
 
   for i in 1:N
@@ -20,7 +23,7 @@ function thermostatstep!(atoms::Array{Atom,1}, thermo::Thermostat, dt::Float64, 
     end
   end
 
-  thermo.zeta  += dt/4.*(momentasquare - dim*(N-1)/thermo.beta) ##Taking into account the degrees of freedom
+  thermo.zeta  += dt/4.*(momentasquare - n/thermo.beta)
   thermo.nu -= dt/2.*(friction(thermo)/thermo.beta)
 
   for i in 1:N
@@ -28,12 +31,12 @@ function thermostatstep!(atoms::Array{Atom,1}, thermo::Thermostat, dt::Float64, 
       atoms[i].p[j] = atoms[i].p[j]*exp(dt/2.*(friction(thermo)/thermo.beta))
     end
   end
-
-  thermo.zeta  += dt/4.*(exp(dt*friction(thermo)/thermo.beta)*momentasquare - dim*(N-1)/thermo.beta) ##Taking into account the degrees of freedom
-
+  thermo.zeta  += dt/4.*(exp(dt*friction(thermo)/thermo.beta)*momentasquare - n/thermo.beta)
 end
 
-
+"""
+Auxiliar function that create the arrays where the data of the simulation will be stored
+"""
 function initializearrays(numsteps::Int)
   time = Array(Float64, numsteps+1)
   energy = Array(Float64, numsteps+1)
@@ -41,32 +44,38 @@ function initializearrays(numsteps::Int)
   potential = Array(Float64, numsteps+1)
   temperature = Array(Float64, numsteps+1)
   invariant = Array(Float64, numsteps+1)
-  vrandomatom =  Array(Float64, numsteps+1)
+  pparticularatom =  Array(Float64, numsteps+1)
+  qparticularatom = Array(Float64, numsteps+1)
 
-  return time, energy, kinetic, potential, temperature, invariant, vrandomatom
+  return time, energy, kinetic, potential, temperature, invariant, pparticularatom, qparticularatom
 end
 
+"""
+Main function to simulate the system with a given density `rho`, number of particles `N` and equilibrium temperature `T`
+during a time `runtime` with a timestep `dt` and a thermostat charactherized by being of a type `thermotype` with parameter
+`Q`.
+"""
 function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, Q::Float64, thermotype::ASCIIString)
 
-
+  n = dim*(N-1)
   numsteps = round(Int, ceil(runtime/dt))
   atoms, Tinst, K , U, L = initialize(N, T, rho)
   H = U + K
 
   thermomodel = eval(parse(thermotype))
-
   thermo = thermomodel(Q, 1/T)
 
-  time, energy, kinetic, potential, temperature, invariant, vrandomatom = initializearrays(numsteps)
+  time, energy, kinetic, potential, temperature, invariant, pparticularatom, qparticularatom = initializearrays(numsteps)
 
 
   ## Thermo variables
   zetas = Array(Float64, numsteps+1)
   nus =  Array(Float64, numsteps+1)
 
-  ## Selecting an atom to study the distribution of a component of the velocity with time
-  randomatom = atoms[2]
-  vrandomatom[1] = randomatom.p[2]
+  ## Selecting an atom to study the distribution of a component (y-component) of the velocity and of the position with time
+  particularatom = atoms[2]
+  pparticularatom[1] = particularatom.p[2]
+  qparticularatom[1] = particularatom.r[2]
 
 
   println("time")
@@ -77,7 +86,7 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
   potential[1] = U
   kinetic[1] = K
   temperature[1] = Tinst
-  invariant[1] = H - logrhoextended(thermo)/thermo.beta + thermo.nu*((N-1)*dim)/thermo.beta
+  invariant[1] = H - logrhoextended(thermo)/thermo.beta + thermo.nu*n/thermo.beta
 
   ##Thermo variables
   zetas[1] = thermo.zeta
@@ -94,7 +103,7 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
 
       K = measurekineticenergy(atoms)
       H = U + K
-      T = K*2/(dim*(N-1))  ##Considering the degrees of freedom
+      T = K*2/n  ##Considering the degrees of freedom
 
 
 
@@ -102,7 +111,7 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
       energy[count+1] = H
       potential[count+1] = U
       kinetic[count+1] = K
-      invariant[count+1] = H - logrhoextended(thermo)/thermo.beta + thermo.nu*((N-1)*dim)/thermo.beta
+      invariant[count+1] = H - logrhoextended(thermo)/thermo.beta + thermo.nu*n/thermo.beta
       temperature[count+1] = T
 
       ####Thermo variables
@@ -110,12 +119,12 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
       zetas[count + 1] = thermo.zeta
       nus[count + 1] = thermo.nu
 
-      vrandomatom[count+1] = randomatom.p[2]
+      ####Atom variables
+      pparticularatom[count+1] = particularatom.p[2]
+      qparticularatom[count+1] = particularatom.r[2]
 
 
-      #############################
-      #Report results
-      #println("$(count*dt), $H, $(U),  $(K), $T")
+      ####Report results
       println("$(count*dt)")
       i += 1
     end
@@ -130,14 +139,16 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
       invariant = invariant[1:i]
       zetas = zetas[1:i]
       nus = nus[1:i]
-      vrandomatom = vrandomatom[1:i]
+      pparticularatom = pparticularatom[1:i]
+      qparticularatom =  qparticularatom[1:i]
 
-      return time, energy, kinetic, potential, temperature, invariant, atoms, zetas, nus, vrandomatom
+
+      return time, energy, kinetic, potential, temperature, invariant, atoms, zetas, nus, pparticularatom, qparticularatom
     end
   end
 
 
-  return time, energy, kinetic, potential, temperature, invariant, atoms, zetas,nus, vrandomatom
+  return time, energy, kinetic, potential, temperature, invariant, atoms, zetas,nus, pparticularatom, qparticularatom
 end
 
 end
