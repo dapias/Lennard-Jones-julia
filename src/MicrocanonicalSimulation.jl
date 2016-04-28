@@ -59,7 +59,7 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64)
   L = cbrt(N/rho)
   numsteps = round(Int, ceil(runtime/dt))
   #Put initial conditions
-  atoms, Tinst, K , U = initialize(L, N, T, rho)
+  atoms, Tinst, K , U = initialize(N, T, rho)
   H = U + K
 
   time, energy, kinetic, potential, temperature = initializearrays(numsteps)

@@ -10,8 +10,6 @@ using MicrocanonicalSimulation
 using ThermostatModel
 
 
-
-
 function thermostatstep!(atoms::Array{Atom,1}, thermo::Thermostat, dt::Float64, N::Int64)
 
   momentasquare = 0.0
@@ -23,9 +21,7 @@ function thermostatstep!(atoms::Array{Atom,1}, thermo::Thermostat, dt::Float64, 
   end
 
   thermo.zeta  += dt/4.*(momentasquare - dim*(N-1)/thermo.beta) ##Taking into account the degrees of freedom
-
   thermo.nu -= dt/2.*(friction(thermo)/thermo.beta)
-
 
   for i in 1:N
     for j in 1:dim
