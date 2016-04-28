@@ -17,7 +17,7 @@ Finally, the folder ``notebooks`` contains a *jupyter notebook* which illustrate
 
 Clone this repository with the following command in a UNIX terminal
 ```
-~$ git clone https://github.com/dapias/LennardJonesJulia.git
+~$ git clone https://github.com/dapias/Lennard-Jones-julia.git
 ```
 
 Then move into the created folder and execute the script.  To do that you may proceed in one of the three different following ways
