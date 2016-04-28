@@ -55,8 +55,8 @@ end
 
 
 """
-Main function to simulate the system with a given density (rho), number of particles(N) and temperature (T), during a time (runtime) with
-a timestep (dt).
+Main function to simulate the system with a given density `rho`, number of particles `N` and initial temperature `T` during a time `runtime`
+with a timestep `dt`.
 """
 function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64)
 
