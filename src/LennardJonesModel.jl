@@ -3,8 +3,11 @@ module LennardJonesModel
 export initialize, computeenergyandforces!, measurekineticenergy, Atom, dim
 
 const dim = 3
-const rc = 2.5 ##Cutoff radius LennardJones Potential
+const rc = 2.5 ##Cutoff radius LennardJones potential
 
+"""
+Type with attributes position (r), momentum (p) and force(f)
+"""
 type Atom{T}
   r::Array{T,1}
   p::Array{T,1}
@@ -13,27 +16,28 @@ end
 
 Atom(r) = Atom(r,zeros(dim), zeros(dim))
 
-
+"""
+Given a number of particles (N) and a density (rho) it arranges the atoms in a cubic simulation cell taking a fcc unit cell
+"""
 function makelattice(N::Int, rho::Float64)
+
   L = cbrt(N/rho)
 
   if L/2. < rc
     error("The given parameters violate the condition ```Length of simulation cell/2 > rc```. Please decrease the density or increase the number of particles.")
   end
 
-  # find M large enough to fit N atoms on the simulation cell with unit cell fcc
-  ## There are 4 atoms that generate the simulation cell by translation
+  # Find M large enough to fit N atoms on the simulation cell with unit cell fcc
+  # There are 4 atoms that generate the simulation cell by translation
 
   M = 1
   while (4*M^3. < N)
     M += 1
   end
 
-  latticedistance = L / M;   #This lattice distance guarantees that the atoms may be arranged in the cell.
+  latticedistance = L / M   #This lattice distance guarantees that the atoms may be arranged in the cell.
 
-
-
-  ##4 atomic positions (base) in the fcc cell
+  #4 atomic positions (base) in the fcc cell
 
   xcell = [0.25,0.75, 0.75, 0.25]
   ycell = [0.25,0.75, 0.25, 0.75]
@@ -61,12 +65,14 @@ function makelattice(N::Int, rho::Float64)
   return atoms, L
 end
 
-@doc """function that creates the array of N atoms in a lattice of side L, with the temperature given by T"""->
+"""
+Creates the simulation cell that contains N atoms and a density rho thermalized at temperature T
+"""
 function initialize(N::Int64, T::Float64, rho::Float64)
-  atoms, L = makelattice(N, rho)
-  K = 0 #Kinetic energy
 
-  ##The approach for velocities is adapted from the book "Understanding Molecular Dynamics" (Daan Frenkel)
+  atoms, L = makelattice(N, rho)
+  n = dim*(N -1)  #Degrees of freedom
+  K = 0           #Kinetic energy
 
   sumv = zeros(dim)
   for i=1:N
@@ -77,8 +83,9 @@ function initialize(N::Int64, T::Float64, rho::Float64)
     end
   end
 
-  ### All the components of the average momentum (p of center of mass) have to be equal to zero. Moreover, the scale factor
-  ## guarantees that K = nkT/2
+  # All the components of the momentum of the center of mass have to be equal to zero. The scale factor
+  # guarantees that K = nkT/2
+
   vaverage =  sumv/(N)
   sumv2new = 0.0
 
@@ -89,8 +96,7 @@ function initialize(N::Int64, T::Float64, rho::Float64)
     end
   end
 
-  scale = sqrt(dim*(N-1)*T/sumv2new)
-  println("scale= $scale")
+  scale = sqrt(n*T/sumv2new)
 
   for i in 1:N
     for j in 1:dim
@@ -102,14 +108,16 @@ function initialize(N::Int64, T::Float64, rho::Float64)
   U = computeenergyandforces!(atoms, L)
 
   #Instantaneous kinetic temperature and energy
-  T = K/(dim*(N-1))
+  T = K/n
   K = K/2
 
   return atoms, T, K, U, L
 end
 
-@doc """Function dealing with periodic boundary conditions. Increases or decreases a number d
-until is bounded by -L/2 <= d < L/2"""->
+"""
+Function dealing with periodic boundary conditions. Increases or decreases by L
+until distance is bounded by -L/2 <= distance < L/2
+"""
 function makePeriodic(distance::Float64, L::Float64)
   while distance < -0.5*L
     distance += L
@@ -123,10 +131,12 @@ function makePeriodic(distance::Float64, L::Float64)
 end
 
 
-@doc """ Determine the interaction force for each pair of particles (i, j)"""->
+"""
+Determines the interaction force for each pair of particles (i, j), save it in each particle's array `f` and computes
+the potential energy of the array of atoms.
+"""
 function computeenergyandforces!(atoms::Array{Atom,1}, L::Float64)
 
-  # rc = 2.5 #Inner cutoff radius
   N = length(atoms)
   U = 0.0
 
@@ -135,7 +145,6 @@ function computeenergyandforces!(atoms::Array{Atom,1}, L::Float64)
       atoms[i].f[j] = 0.
     end
   end
-
 
   for i in 1:N-1
     for j in (i+1):N
@@ -148,7 +157,7 @@ function computeenergyandforces!(atoms::Array{Atom,1}, L::Float64)
 
       if r2 < rc*rc
 
-        r = sqrt(r2)   ####Check how to get rid of this calculation (how to avoid taking the square root)
+        r = sqrt(r2)   #Check how to get rid of this calculation
         r2inverse = 1/r2
         r6inverse = r2inverse * r2inverse * r2inverse
 
@@ -167,14 +176,15 @@ function computeenergyandforces!(atoms::Array{Atom,1}, L::Float64)
         atoms[j].f[3] -= fij*deltaz
 
       end
-
-
     end
   end
   return U
 end
 
 
+"""
+Given the array of atoms it computes the kinetic energy
+"""
 function measurekineticenergy(atoms::Array{Atom,1})
   K = 0.
   N = length(atoms)
