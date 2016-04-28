@@ -6,42 +6,42 @@ using LennardJonesModel
 
 export verlet!, run
 
-@doc """Function that implements the velocity Verlet algorithm to integrate the equations of motion with step size `dt`"""->
+"""
+Function that implements the velocity Verlet algorithm to integrate the equations of motion with step size `dt`
+"""
 function verlet!(atoms::Array{Atom,1}, dt::Float64, L::Float64)
   N = length(atoms)
 
-
-  # half-force step
+  # Half-force step
   for i in 1:N
     for j in 1:dim
       atoms[i].p[j] +=  0.5*dt*atoms[i].f[j]
     end
   end
 
-  # full free motion step
+  # Full free motion step
   for i in 1:N
     for j in 1:dim
       atoms[i].r[j] += dt*atoms[i].p[j]
     end
   end
 
-
-
-  # positions were changed, so recompute the forces
+  # Positions were changed, so we compute again the forces
   U = computeenergyandforces!(atoms, L)
 
-  # final force half-step
+  # Final half-force step
   for i in 1:N
     for j in 1:dim
       atoms[i].p[j] +=  0.5*dt*atoms[i].f[j]
     end
   end
 
-
-
   return U
 end
 
+"""
+Auxiliar function that initialize arrays that will be used in function run
+"""
 function initializearrays(numsteps::Int)
   time = Array(Float64, numsteps+1)
   energy = Array(Float64, numsteps+1)
@@ -54,16 +54,18 @@ end
 
 
 
-
+"""
+Main function to simulate the system with a given density (rho), number of particles(N) and temperature (T), during a time (runtime) with
+a timestep (dt).
+"""
 function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64)
-  L = cbrt(N/rho)
+
+  n = dim*(N-1)
   numsteps = round(Int, ceil(runtime/dt))
-  #Put initial conditions
-  atoms, Tinst, K , U = initialize(N, T, rho)
+  atoms, Tinst, K , U, L = initialize(N, T, rho)
   H = U + K
 
   time, energy, kinetic, potential, temperature = initializearrays(numsteps)
-
 
   println("time")
   println("0.0")
@@ -75,16 +77,12 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64)
   temperature[1] = Tinst
 
   i = 1
-  #Perform time steps
   try
     for count in 1:numsteps
       U = verlet!(atoms, dt, L)
       K = measurekineticenergy(atoms)
       H = U + K
-
-      T = K*2/(dim*(N-1))
-
-
+      T = K*2/n
 
       time[count+1] = count*dt
       energy[count+1] = H
@@ -92,8 +90,6 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64)
       kinetic[count+1] = K
       temperature[count+1] = T
 
-      #Report results
-      #println("$(count*dt), $H, $(U),  $(K), $T")
       println("$(count*dt)")
       i += 1
     end
