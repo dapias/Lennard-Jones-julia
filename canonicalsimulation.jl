@@ -69,7 +69,8 @@ invariant = results[6]
 atoms = results[7]   ###For the moment, I don't save it in HDF5 file
 zeta = results[8]
 nu = results[9]
-vrandatom = results[10]
+patom = results[10]
+qatom = results[11]
 
 file["t"] = time
 attrs(file)["runtime"] = time[end]
@@ -80,8 +81,8 @@ file["T"] = temperature
 file["invariant"] = invariant
 file["zeta"] = zeta
 file["nu"] = nu
-file["vrandatom"] = vrandatom
-
+file["patom"] = patom
+file["qatom"] = qatom
 
 close(file)
 
