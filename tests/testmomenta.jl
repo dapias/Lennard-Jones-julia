@@ -18,7 +18,7 @@ Q = 1.0
 
 L = cbrt(N/rho)
 
-atoms, T, K, U = LennardJonesModel.initialize(L, N, T, rho)
+atoms, T, K, U = LennardJonesModel.initialize(N, T, rho)
 
 
 facts("Conserved Linear Momenta At the Beginning of the simulation ") do
@@ -40,8 +40,8 @@ end
 
 facts("Conserved Linear Momenta After 100 steps (Microcanonical ensemble) ") do
 
-  time, energy, kinetic, potential, temperature, atoms = MicrocanonicalSimulation.run(runtime, rho, dt, T, N)
-
+  results = MicrocanonicalSimulation.run(runtime, rho, dt, T, N)
+  atoms = results[6]
   momenta = Array(Float64,3)
 
   for j in 1:dim
@@ -59,8 +59,8 @@ end
 
 facts("Conserved Linear Momenta After 100 steps (Canonical ensemble) ") do
 
-  time, energy, kinetic, potential, temperature, invariant, atoms = CanonicalSimulation.run(runtime, rho, dt, T, N, Q)
-
+  results = CanonicalSimulation.run(runtime, rho, dt, T, N, Q, "Gaussian")
+  atoms = results[7]
   momenta = Array(Float64,3)
 
   for j in 1:dim
