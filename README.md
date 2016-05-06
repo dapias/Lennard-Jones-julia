@@ -1,7 +1,7 @@
-#A geometric integrator for simulations in the canonical ensemble
+#Geometric integrator for simulations in the canonical ensemble
 ## Lennard-Jones system
 
-We provide the code that supports the numerical simulation reported in the manuscript [A geometric integrator for simulations in the canonical ensemble](http://arxiv.org/abs/1510.03942).
+We provide the code that supports the numerical simulation reported in the manuscript [A geometric integrator for simulations in the canonical ensemble](http://arxiv.org/abs/1605.01654).
 
 It is organized as follows.
 
