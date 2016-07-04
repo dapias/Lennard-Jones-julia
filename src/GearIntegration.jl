@@ -8,7 +8,6 @@ module GearIntegration
 export run
 
 using LennardJonesModel
-#using MicrocanonicalSimulation
 using ThermostatModel
 
 

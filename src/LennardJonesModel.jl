@@ -6,7 +6,7 @@ const dim = 3
 const rc = 2.5 ##Cutoff radius LennardJones potential
 
 """
-        Type with attributes position (r), momentum (p) and force(f)
+        Type with attributes position (r), momentum (p) and force(f), higher derivatives of r: aa, aaa, a4; and the attribute correction which stores the correction value of the force in the Predictor-Corrector scheme
         """
 type Atom{T}
     r::Array{T,1}
