@@ -12,19 +12,19 @@ using ThermostatModel
 
 
 """
-Auxiliar function that create the arrays where the data of the simulation will be stored
-"""
+    Auxiliar function that create the arrays where the data of the simulation will be stored
+    """
 function initializearrays(numsteps::Int)
-  time = Array(Float64, numsteps+1)
-  energy = Array(Float64, numsteps+1)
-  kinetic = Array(Float64, numsteps+1)
-  potential = Array(Float64, numsteps+1)
-  temperature = Array(Float64, numsteps+1)
-  invariant = Array(Float64, numsteps+1)
-  pparticularatom =  Array(Float64, numsteps+1)
-  qparticularatom = Array(Float64, numsteps+1)
+    time = Array(Float64, numsteps+1)
+    energy = Array(Float64, numsteps+1)
+    kinetic = Array(Float64, numsteps+1)
+    potential = Array(Float64, numsteps+1)
+    temperature = Array(Float64, numsteps+1)
+    invariant = Array(Float64, numsteps+1)
+    pparticularatom =  Array(Float64, numsteps+1)
+    qparticularatom = Array(Float64, numsteps+1)
 
-  return time, energy, kinetic, potential, temperature, invariant, pparticularatom, qparticularatom
+    return time, energy, kinetic, potential, temperature, invariant, pparticularatom, qparticularatom
 end
 
 function predictorgear!(atom::Atom, Δt::Float64)
@@ -55,7 +55,7 @@ end
 
 function computeforcegear!(atoms::Array{Atom,1}, thermo::Thermostat, L::Float64)
     
-     #computeforcegear!(thermo,atoms)  ##Checar este orden
+    #computeforcegear!(thermo,atoms)  ##Checar este orden
     
     N = length(atoms)
     U = 0.0
@@ -97,9 +97,9 @@ function computeforcegear!(atoms::Array{Atom,1}, thermo::Thermostat, L::Float64)
                 atoms[j].f[3] -= fij*deltaz 
             end
 
-            end
         end
-        
+    end
+    
     for i in 1:N
         atoms[i].f += friction(thermo)/thermo.beta*atoms[i].p
         atoms[i].correction += atoms[i].f
@@ -135,27 +135,27 @@ function correctorgear!(thermo::Thermostat,Δt::Float64, n::Int64, atoms::Array{
     thermo.nu += Δt*(-friction(thermo)/thermo.beta)
     
     
-#     k0 = 251/720.
-#     k2 = 11/12.
-#     k3 = 1/3.
-#     k4 = 1/24.
+    #     k0 = 251/720.
+    #     k2 = 11/12.
+    #     k3 = 1/3.
+    #     k4 = 1/24.
 
-#     thermo.nu += k0*Δt*thermo.correctionnu
-#     thermo.anu +=  k2*thermo.correctionnu*2./(Δt)
-#     thermo.aanu += k3*thermo.correctionnu*6./(Δt^2.)
-#     thermo.aaanu += k4*thermo.correctionnu*24/(Δt^3.)
+    #     thermo.nu += k0*Δt*thermo.correctionnu
+    #     thermo.anu +=  k2*thermo.correctionnu*2./(Δt)
+    #     thermo.aanu += k3*thermo.correctionnu*6./(Δt^2.)
+    #     thermo.aaanu += k4*thermo.correctionnu*24/(Δt^3.)
     
     
     
-#     k0 = 19/120.
-#     k1 = 3/4.
-#     k3 = 1/2.
-#     k4 = 1/12.
+    #     k0 = 19/120.
+    #     k1 = 3/4.
+    #     k3 = 1/2.
+    #     k4 = 1/12.
 
-#     thermo.zeta += k0*Δt^2./2*thermo.correctionzeta
-#     thermo.zetadot +=  k1*Δt/2.*thermo.correctionzeta
-#     thermo.aazeta += k3*thermo.correctionzeta*6./(2.*Δt)
-#     thermo.aaazeta += k4*thermo.correctionzeta*24/(2.*Δt^2.)
+    #     thermo.zeta += k0*Δt^2./2*thermo.correctionzeta
+    #     thermo.zetadot +=  k1*Δt/2.*thermo.correctionzeta
+    #     thermo.aazeta += k3*thermo.correctionzeta*6./(2.*Δt)
+    #     thermo.aaazeta += k4*thermo.correctionzeta*24/(2.*Δt^2.)
     
     
 end
@@ -175,82 +175,98 @@ end
 
 function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, Q::Float64, thermotype::ASCIIString)
 
-  n = dim*(N-1)
-  numsteps = round(Int, ceil(runtime/dt))
-  atoms, Tinst, K , U, L = initialize(N, T, rho)
-  H = U + K
+    n = dim*(N-1)
+    numsteps = round(Int, ceil(runtime/dt))
+    atoms, Tinst, K , U, L = initialize(N, T, rho)
+    H = U + K
 
-  thermomodel = eval(parse(thermotype))
-  thermo = thermomodel(Q, 1/T)
+    thermomodel = eval(parse(thermotype))
+    thermo = thermomodel(Q, 1/T)
 
-  time, energy, kinetic, potential, temperature, invariant, pparticularatom, qparticularatom = initializearrays(numsteps)
-
-
-  ## Thermo variables
-  zetas = Array(Float64, numsteps+1)
-  nus =  Array(Float64, numsteps+1)
-
-  ## Selecting an atom to study the distribution of a component (y-component) of the velocity and of the position with time
-  particularatom = atoms[2]
-  pparticularatom[1] = particularatom.p[2]
-  qparticularatom[1] = particularatom.r[2]
+    time, energy, kinetic, potential, temperature, invariant, pparticularatom, qparticularatom = initializearrays(numsteps)
 
 
-  println("time")
-  println("0.0")
+    ## Thermo variables
+    zetas = Array(Float64, numsteps+1)
+    nus =  Array(Float64, numsteps+1)
 
-  time[1] = 0.0
-  energy[1] = H
-  potential[1] = U
-  kinetic[1] = K
-  temperature[1] = Tinst
-  invariant[1] = H - logrhoextended(thermo)/thermo.beta + thermo.nu*n/thermo.beta
-
-  ##Thermo variables
-  zetas[1] = thermo.zeta
-  nus[1] = thermo.nu
-
-  i = 1
-  #computeforcegear!(atoms,thermo,L)
-  #Perform time steps
-  for count in 1:numsteps
-        
-        predictorgear!(atoms, thermo,dt)
-        U = computeforcegear!(atoms,thermo, L)
-        correctorgear!(atoms,thermo, dt, n)
+    ## Selecting an atom to study the distribution of a component (y-component) of the velocity and of the position with time
+    particularatom = atoms[2]
+    pparticularatom[1] = particularatom.p[2]
+    qparticularatom[1] = particularatom.r[2]
 
 
+    println("time")
+    println("0.0")
 
-      K = measurekineticenergy(atoms)
-      H = U + K
-      T = K*2/n  ##Considering the degrees of freedom
+    time[1] = 0.0
+    energy[1] = H
+    potential[1] = U
+    kinetic[1] = K
+    temperature[1] = Tinst
+    invariant[1] = H - logrhoextended(thermo)/thermo.beta + thermo.nu*n/thermo.beta
+
+    ##Thermo variables
+    zetas[1] = thermo.zeta
+    nus[1] = thermo.nu
+
+    i = 1
+    #computeforcegear!(atoms,thermo,L)
+    #Perform time steps
+    try
+        for count in 1:numsteps
+            
+            predictorgear!(atoms, thermo,dt)
+            U = computeforcegear!(atoms,thermo, L)
+            correctorgear!(atoms,thermo, dt, n)
+
+            K = measurekineticenergy(atoms)
+            H = U + K
+            T = K*2/n  ##Considering the degrees of freedom
 
 
 
-      time[count+1] = count*dt
-      energy[count+1] = H
-      potential[count+1] = U
-      kinetic[count+1] = K
-      invariant[count+1] = H - logrhoextended(thermo)/thermo.beta + thermo.nu*n/thermo.beta
-      temperature[count+1] = T
+            time[count+1] = count*dt
+            energy[count+1] = H
+            potential[count+1] = U
+            kinetic[count+1] = K
+            invariant[count+1] = H - logrhoextended(thermo)/thermo.beta + thermo.nu*n/thermo.beta
+            temperature[count+1] = T
 
-      ####Thermo variables
+            ####Thermo variables
 
-      zetas[count + 1] = thermo.zeta
-      nus[count + 1] = thermo.nu
+            zetas[count + 1] = thermo.zeta
+            nus[count + 1] = thermo.nu
 
-      ####Atom variables
-      pparticularatom[count+1] = particularatom.p[2]
-      qparticularatom[count+1] = particularatom.r[2]
+            ####Atom variables
+            pparticularatom[count+1] = particularatom.p[2]
+            qparticularatom[count+1] = particularatom.r[2]
 
 
-      ####Report results
-      println("$(count*dt)")
-      i += 1
+            ####Report results
+            println("$(count*dt)")
+            i += 1
+        end
+
+    catch y   ##If the simulation is stopped, the arrays calculated until this moment are returende
+        if isa(y, InterruptException)
+            time = time[1:i]
+            energy = energy[1:i]
+            kinetic = kinetic[1:i]
+            potential = potential[1:i]
+            temperature = temperature[1:i]
+            invariant = invariant[1:i]
+            zetas = zetas[1:i]
+            nus = nus[1:i]
+            pparticularatom = pparticularatom[1:i]
+            qparticularatom =  qparticularatom[1:i]
+
+
+            return time, energy, kinetic, potential, temperature, invariant, atoms, zetas, nus, pparticularatom, qparticularatom
+        end
     end
 
-
-  return time, energy, kinetic, potential, temperature, invariant, atoms, zetas,nus, pparticularatom, qparticularatom
+    return time, energy, kinetic, potential, temperature, invariant, atoms, zetas,nus, pparticularatom, qparticularatom
 
 end
 
