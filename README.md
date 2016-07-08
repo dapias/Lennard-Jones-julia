@@ -1,7 +1,7 @@
 #Geometric integrator for simulations in the canonical ensemble
 ## Lennard-Jones system
 
-We provide the code that supports the numerical simulation reported in the manuscript [A geometric integrator for simulations in the canonical ensemble](http://arxiv.org/abs/1605.01654).
+We provide the code that supports the numerical simulation reported in the manuscript [Geometric integrator for simulations in the canonical ensemble](http://arxiv.org/abs/1605.01654).
 
 It is organized as follows.
 
@@ -36,7 +36,7 @@ This command opens the Julia [REPL](https://en.wikibooks.org/wiki/Introducing_Ju
  julia> include("canonicalsimulation.jl")
  ```
 
-3. Open a Jupyter Notebook and type in a cell
+3. Open a Jupyter Notebook and type in a cell (if the simulation is quite long, the browser might stop working!)
  ```
  include("canonicalsimulation.jl")
  ```
@@ -57,6 +57,23 @@ To add a package type the following command in the Julia REPL.
 ```
 julia> Pkg.add("PackageName")
 ```
+
+### Miscellaneous
+#### Gear Integration
+The code for the Gear integration is in the branch *Gear*. Check the directory `src/` that contains the main code and the  directory `notebooks/` which contains a tutorial to run Gear integrations. 
+
+To switch to the *Gear* branch, open a terminal, switch to this directory *Lennard-Jones-julia* and then type
+
+```
+$ git checkout Gear
+```
+
+To go back to the master branch try
+```
+$ git checkout master
+```
+
+
 ###Authors
 
 **Diego Tapias** (Facultad de Ciencias, UNAM) diego.tapias@nucleares.unam.mx
