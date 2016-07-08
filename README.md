@@ -72,7 +72,7 @@ To go back to the master branch try
 ```
 $ git checkout master
 ```
-
+To just check the main code online click [here](https://github.com/dapias/Lennard-Jones-julia/blob/Gear/src/GearIntegration.jl)
 
 ###Authors
 
