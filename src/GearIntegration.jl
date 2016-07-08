@@ -27,6 +27,7 @@ function initializearrays(numsteps::Int)
     return time, energy, kinetic, potential, temperature, invariant, pparticularatom, qparticularatom
 end
 
+
 function predictorgear!(atom::Atom, Δt::Float64)
     Δt2 = Δt^2.0/2.
     Δt3 = Δt2*Δt/3.
@@ -48,14 +49,11 @@ end
 
 function predictorgear!(atoms::Array{Atom,1}, thermo::Thermostat,  Δt::Float64)
     predictorgear!(atoms, Δt)
-    #predictorgear!(thermo,Δt)    
     
     return nothing
 end
 
 function computeforcegear!(atoms::Array{Atom,1}, thermo::Thermostat, L::Float64)
-    
-    #computeforcegear!(thermo,atoms)  ##Checar este orden
     
     N = length(atoms)
     U = 0.0
@@ -133,31 +131,7 @@ function correctorgear!(thermo::Thermostat,Δt::Float64, n::Int64, atoms::Array{
     
     thermo.zeta -= Δt*(n/thermo.beta)
     thermo.nu += Δt*(-friction(thermo)/thermo.beta)
-    
-    
-    #     k0 = 251/720.
-    #     k2 = 11/12.
-    #     k3 = 1/3.
-    #     k4 = 1/24.
-
-    #     thermo.nu += k0*Δt*thermo.correctionnu
-    #     thermo.anu +=  k2*thermo.correctionnu*2./(Δt)
-    #     thermo.aanu += k3*thermo.correctionnu*6./(Δt^2.)
-    #     thermo.aaanu += k4*thermo.correctionnu*24/(Δt^3.)
-    
-    
-    
-    #     k0 = 19/120.
-    #     k1 = 3/4.
-    #     k3 = 1/2.
-    #     k4 = 1/12.
-
-    #     thermo.zeta += k0*Δt^2./2*thermo.correctionzeta
-    #     thermo.zetadot +=  k1*Δt/2.*thermo.correctionzeta
-    #     thermo.aazeta += k3*thermo.correctionzeta*6./(2.*Δt)
-    #     thermo.aaazeta += k4*thermo.correctionzeta*24/(2.*Δt^2.)
-    
-    
+        
 end
 
 function correctorgear!(atoms::Array{Atom,1}, Δt::Float64)
@@ -211,7 +185,7 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
     nus[1] = thermo.nu
 
     i = 1
-    #computeforcegear!(atoms,thermo,L)
+    
     #Perform time steps
     try
         for count in 1:numsteps
@@ -248,7 +222,7 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
             i += 1
         end
 
-    catch y   ##If the simulation is stopped, the arrays calculated until this moment are returende
+    catch y   ##If the simulation is stopped, the arrays calculated until this moment are returned
         if isa(y, InterruptException)
             time = time[1:i]
             energy = energy[1:i]
