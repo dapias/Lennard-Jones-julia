@@ -62,7 +62,7 @@ julia> Pkg.add("PackageName")
 #### Gear Integration
 The code for the Gear integration is in the branch *Gear*. Check the directory `src/` that contains the main code and the  directory `notebooks/` which contains a tutorial to run Gear integrations. 
 
-To switch to the *Gear* branch, open a terminal, switch to this directory *Lennard-Jones-julia* and then type
+To switch to the *Gear* branch: open a terminal, move to the directory *Lennard-Jones-julia* and then type
 
 ```
 $ git checkout Gear
