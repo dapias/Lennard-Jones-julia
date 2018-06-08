@@ -2,9 +2,9 @@ module ThermostatModel
 
 export Thermostat, Gaussian, Logistic, Quartic, logrhoextended, friction
 
-abstract Thermostat
+abstract type Thermostat end
 
-############Nosé-Hooover ###############
+############Nose-Hooover ###############
 
 type Gaussian{T} <: Thermostat
   Q::T #Parameter that characterizes the distribution (standard deviation)
@@ -42,14 +42,14 @@ Logistic(Q, beta) = Logistic(Q, 0.0, rand(), beta)    ##May change the default 0
 Logistic(Q, beta, zeta) = Logistic(Q, 0.0, zeta, beta)
 
 function logrhoextended(T::Logistic)
-  z = T.zeta-T.Q
-  distribution = exp(z)/((1+exp(z))^2)
+  z = T.zeta/T.Q
+  distribution = exp(z)/(T.Q*(1+exp(z))^2)
   log(distribution)
 end
 
 @doc """Friction coefficient f'(w)/f(w)"""->
 function friction(T::Logistic)
-  z = T.zeta-T.Q
+  z = T.zeta/T.Q
   (1 - exp(z))/(1+exp(z))
 end
 
