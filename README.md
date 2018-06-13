@@ -74,7 +74,7 @@ $ git checkout master
 ```
 To just check the main code online click [here](https://github.com/dapias/Lennard-Jones-julia/blob/Gear/src/GearIntegration.jl)
 
-###Authors
+### Author
 
 **Diego Tapias** (Facultad de Ciencias, UNAM) diego.tapias@nucleares.unam.mx
 
