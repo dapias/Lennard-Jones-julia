@@ -32,25 +32,26 @@ end
 ############Logistic distribution##############
 
 type Logistic{T} <: Thermostat
-  Q::T ##Parameter that characterizes the distribution (mean)
+  Q::T ##Parameter that characterizes the distribution (scale)
   nu::T
   zeta::T
   beta::T
 end
 
-Logistic(Q, beta) = Logistic(Q, 0.0, rand(), beta)    ##May change the default 0.0 by rand() for nu
+Logistic(Q, beta) = Logistic(Q, 0.0, rand(), beta) 
 Logistic(Q, beta, zeta) = Logistic(Q, 0.0, zeta, beta)
 
 function logrhoextended(T::Logistic)
-  z = T.zeta/T.Q
-  distribution = exp(z)/(T.Q*(1+exp(z))^2)
-  log(distribution)
+    z = T.zeta/T.Q
+    #distribution = 1/(4*T.Q)*(sech(z/2))^2
+    #log(distribution)
+    2*log((sech(z/2)))
 end
 
 @doc """Friction coefficient f'(w)/f(w)"""->
 function friction(T::Logistic)
   z = T.zeta/T.Q
-  (1 - exp(z))/(1+exp(z))
+  -tanh(z/2)*1/T.Q
 end
 
 

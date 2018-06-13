@@ -42,12 +42,13 @@ function initializearrays(numsteps::Int)
   energy = Array{Float64}(numsteps+1)
   kinetic = Array{Float64}(numsteps+1)
   potential = Array{Float64}(numsteps+1)
-  temperature = Array{Float64}(numsteps+1)
+#  temperature = Array{Float64}(numsteps+1)
   invariant = Array{Float64}(numsteps+1)
-  pparticularatom =  Array{Float64}(numsteps+1)
-  qparticularatom = Array{Float64}(numsteps+1)
+#  pparticularatom =  Array{Float64}(numsteps+1)
+#  qparticularatom = Array{Float64}(numsteps+1)
 
-  return time, energy, kinetic, potential, temperature, invariant, pparticularatom, qparticularatom
+    #  return time, energy, kinetic, potential, temperature, invariant, pparticularatom, qparticularatom
+    return time, energy, kinetic, potential, invariant
 end
 
 """
@@ -65,17 +66,19 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
   thermomodel = eval(parse(thermotype))
   thermo = thermomodel(Q, 1/T)
 
-  time, energy, kinetic, potential, temperature, invariant, pparticularatom, qparticularatom = initializearrays(numsteps)
+#    time, energy, kinetic, potential, temperature, invariant, pparticularatom, qparticularatom = initializearrays(numsteps)
+
+    time, energy, kinetic, potential, invariant = initializearrays(numsteps)
 
 
   ## Thermo variables
-  zetas = Array{Float64}(numsteps+1)
-  nus =  Array{Float64}(numsteps+1)
+  #zetas = Array{Float64}(numsteps+1)
+  #nus =  Array{Float64}(numsteps+1)
 
   ## Selecting an atom to study the distribution of a component (y-component) of the velocity and of the position with time
-  particularatom = atoms[2]
-  pparticularatom[1] = particularatom.p[2]
-  qparticularatom[1] = particularatom.r[2]
+#  particularatom = atoms[2]
+#  pparticularatom[1] = particularatom.p[2]
+#  qparticularatom[1] = particularatom.r[2]
 
 
   println("time")
@@ -85,12 +88,12 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
   energy[1] = H
   potential[1] = U
   kinetic[1] = K
-  temperature[1] = Tinst
+#  temperature[1] = Tinst
   invariant[1] = H - logrhoextended(thermo)/thermo.beta + thermo.nu*n/thermo.beta
 
   ##Thermo variables
-  zetas[1] = thermo.zeta
-  nus[1] = thermo.nu
+ # zetas[1] = thermo.zeta
+ # nus[1] = thermo.nu
 
   i = 1
   #Perform time steps
@@ -112,16 +115,16 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
       potential[count+1] = U
       kinetic[count+1] = K
       invariant[count+1] = H - logrhoextended(thermo)/thermo.beta + thermo.nu*n/thermo.beta
-      temperature[count+1] = T
+    #  temperature[count+1] = T
 
       ####Thermo variables
 
-      zetas[count + 1] = thermo.zeta
-      nus[count + 1] = thermo.nu
+      #zetas[count + 1] = thermo.zeta
+      #nus[count + 1] = thermo.nu
 
       ####Atom variables
-      pparticularatom[count+1] = particularatom.p[2]
-      qparticularatom[count+1] = particularatom.r[2]
+      #pparticularatom[count+1] = particularatom.p[2]
+      #qparticularatom[count+1] = particularatom.r[2]
 
 
       ####Report results
@@ -135,20 +138,23 @@ function run(runtime::Float64, rho::Float64, dt::Float64, T::Float64, N::Int64, 
       energy = energy[1:i]
       kinetic = kinetic[1:i]
       potential = potential[1:i]
-      temperature = temperature[1:i]
+      #temperature = temperature[1:i]
       invariant = invariant[1:i]
-      zetas = zetas[1:i]
-      nus = nus[1:i]
-      pparticularatom = pparticularatom[1:i]
-      qparticularatom =  qparticularatom[1:i]
+      #zetas = zetas[1:i]
+      #nus = nus[1:i]
+      #pparticularatom = pparticularatom[1:i]
+      #qparticularatom =  qparticularatom[1:i]
 
 
-      return time, energy, kinetic, potential, temperature, invariant, atoms, zetas, nus, pparticularatom, qparticularatom
+        #      return time, energy, kinetic, potential, temperature, invariant, atoms, zetas, nus, pparticularatom, qparticularatom
+
+        return time, energy, kinetic, potential, invariant
     end
   end
 
 
-  return time, energy, kinetic, potential, temperature, invariant, atoms, zetas,nus, pparticularatom, qparticularatom
+    #  return time, energy, kinetic, potential, temperature, invariant, atoms, zetas,nus, pparticularatom, qparticularatom
+    return time, energy, kinetic, potential, invariant
 end
 
 end
