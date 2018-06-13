@@ -1,7 +1,7 @@
-#Geometric integrator for simulations in the canonical ensemble
+# Geometric integrator for simulations in the canonical ensemble
 ## Lennard-Jones system
 
-We provide the code that supports the numerical simulation reported in the manuscript [Geometric integrator for simulations in the canonical ensemble](http://arxiv.org/abs/1605.01654).
+We provide the code that supports the numerical simulation reported in the manuscript [Geometric integrator for simulations in the canonical ensemble](https://aip.scitation.org/doi/abs/10.1063/1.4961506?journalCode=jcp). Note: the Logistic Thermostat was updated following the prescription stated in the paper [Ergodicity of One-dimensional Systems Coupled to the Logistic Thermostat](http://cmst.eu/articles/ergodicity-of-one-dimensional-systems-coupled-to-the-logistic-thermostat/). This change obeys to control the scale of the Logistic distribution instead of the mean in order to make the deterministic equations time-reversible.
 
 It is organized as follows.
 
